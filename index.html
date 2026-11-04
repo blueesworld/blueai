@@ -8,37 +8,39 @@
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#eaf0ff;--mute:#8d9cc0;--line:rgba(255,255,255,.08);--panel:#0a1430;--accent:#3b7bff}
+:root{--ink:#ececec;--mute:#9b9b9b;--line:rgba(255,255,255,.1);--bg:#212121;--side:#171717;--panel:#2f2f2f;--accent:#3d7bff}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,#081437 0%,#050d26 60%,#040a1c 100%);background-attachment:fixed;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);-webkit-font-smoothing:antialiased}
-aside.glass{background:rgba(5,11,30,.75);border:0;border-right:1px solid var(--line);backdrop-filter:blur(12px)}
-.glass{background:rgba(255,255,255,.045);border:1px solid var(--line)}
-.glow{box-shadow:0 12px 40px -16px rgba(0,0,0,.6)}
-.btn{background:var(--accent);color:#fff;transition:background .15s}
-.btn:hover{background:#2f6ae6}
-.btn:disabled{opacity:.6}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);-webkit-font-smoothing:antialiased}
+aside.glass{background:var(--side);border:0}
+.glass{background:var(--panel);border:0}
+.glow{box-shadow:0 8px 30px rgba(0,0,0,.45)}
+.btn{background:#fff;color:#0d0d0d;transition:background .15s}
+.btn:hover{background:#e3e3e3}
+.btn:disabled{opacity:.5}
 .ghost{transition:background .15s}
-.ghost:hover{background:rgba(255,255,255,.07)}
-input,textarea,select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--ink);border-radius:10px;padding:.65rem .85rem;width:100%;font:inherit;font-size:.92rem;transition:border-color .15s,box-shadow .15s}
-input::placeholder,textarea::placeholder{color:#6f7fa6}
-input:focus,textarea:focus,select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,123,255,.25)}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-select option{background:#0a1430}
-input[type=range]{padding:0;accent-color:var(--accent)}
+.ghost:hover{background:rgba(255,255,255,.08)}
+input,textarea,select{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--ink);border-radius:12px;padding:.65rem .85rem;width:100%;font:inherit;font-size:.95rem;transition:border-color .15s}
+input::placeholder,textarea::placeholder{color:#8e8e8e}
+input:focus,textarea:focus,select:focus{outline:0;border-color:rgba(255,255,255,.5)}
+textarea.bare{border:0;background:transparent;padding:.5rem .25rem;box-shadow:none}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+select option{background:#2f2f2f}
+input[type=range]{padding:0;accent-color:#fff;border:0}
 .mono{font-family:'JetBrains Mono',monospace}
-.md{font-size:.95rem}
-.md p{margin:.5em 0;line-height:1.75}.md ul{list-style:disc;padding-left:1.4em}.md ol{list-style:decimal;padding-left:1.4em}
-.md code:not(pre code){background:rgba(255,255,255,.09);padding:.1em .4em;border-radius:6px;font-size:.85em}
-.md pre{position:relative;background:#030816;border:1px solid var(--line);border-radius:12px;padding:1rem;overflow-x:auto;margin:.8em 0;font-size:.82rem;line-height:1.6}
+.md{font-size:1rem}
+.md p{margin:.6em 0;line-height:1.75}.md ul{list-style:disc;padding-left:1.5em}.md ol{list-style:decimal;padding-left:1.5em}.md li{margin:.25em 0}
+.md h1,.md h2,.md h3{font-weight:600;margin:1em 0 .4em}
+.md code:not(pre code){background:rgba(255,255,255,.1);padding:.12em .4em;border-radius:6px;font-size:.88em}
+.md pre{position:relative;background:#0d0d0d;border-radius:12px;padding:1rem;overflow-x:auto;margin:.9em 0;font-size:.85rem;line-height:1.6}
 .md pre code{font-family:'JetBrains Mono',monospace}
-.copy{position:absolute;top:.5rem;right:.5rem;font-size:.7rem;padding:.25rem .55rem;border-radius:8px;background:rgba(255,255,255,.1)}
+.copy{position:absolute;top:.5rem;right:.5rem;font-size:.72rem;padding:.25rem .6rem;border-radius:8px;background:rgba(255,255,255,.1)}
 .copy:hover{background:rgba(255,255,255,.18)}
 .dot{animation:p 1.2s infinite}.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-@keyframes p{0%,80%,100%{opacity:.2}40%{opacity:1}}
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}
+@keyframes p{0%,80%,100%{opacity:.25}40%{opacity:1}}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:8px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -207,100 +209,6 @@ function regen() {
   while (c.messages.length && c.messages.at(-1).role === 'assistant') c.messages.pop();
   const last = c.messages.pop(); if (last) send(last.content);
 }
-function rate(i, v) { const m = chat().messages[i]; m.rating = m.rating === v ? null : v; save(); renderMessages(true); }
-/* Gut bewertete Antworten als Trainingsdaten (Chat-JSONL, direkt für train_lora.py nutzbar) */
-function exportTraining() {
-  const rows = [];
-  S.data.chats.forEach(c => c.messages.forEach((m, i) => { if (m.rating === 'up' && m.role === 'assistant') rows.push(JSON.stringify({ messages: [{ role: 'system', content: S.data.settings.system }, ...c.messages.slice(0, i + 1).map(({ role, content }) => ({ role, content }))] })); }));
-  if (!rows.length) return toast('Noch keine Antworten mit Daumen hoch bewertet.');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'application/jsonl' })); a.download = 'train.jsonl'; a.click(); URL.revokeObjectURL(a.href);
-  toast(rows.length + ' Beispiele exportiert.');
-}
-
-/* ---------- Training-Inhalte (kopierbar) ---------- */
-const TRAIN = {
-  setup: { title: '1 · Setup', lang: 'bash', code: `# Ollama installieren (https://ollama.com) und Basismodell laden
-ollama pull llama3.1:8b        # Basis für Blue AI 1.0
-ollama pull mistral-nemo:12b   # Basis für Blue AI 1.1 Pro
-
-# Python-Umgebung für das Fine-Tuning (NVIDIA-GPU mit >= 16 GB VRAM empfohlen)
-python -m venv .venv && source .venv/bin/activate
-pip install torch transformers datasets peft trl bitsandbytes accelerate` },
-  data: { title: '2 · Datensatz', lang: 'json', code: `// data/train.jsonl – eine Zeile pro Beispiel (Chat-Format)
-{"messages":[{"role":"system","content":"Du bist Blue AI."},{"role":"user","content":"Wer bist du?"},{"role":"assistant","content":"Ich bin Blue AI, ein lokal laufender Assistent."}]}
-{"messages":[{"role":"user","content":"Erkläre Rekursion in einem Satz."},{"role":"assistant","content":"Rekursion heißt, dass eine Funktion sich selbst mit einem kleineren Problem aufruft, bis ein Basisfall erreicht ist."}]}
-// Faustregel: 500–5.000 saubere, vielfältige Beispiele schlagen 100.000 verrauschte.` },
-  train: { title: '3 · LoRA-Training', lang: 'python', code: `# train_lora.py  –  QLoRA-Fine-Tuning für Blue AI
-import sys, torch
-from datasets import load_dataset
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig
-from trl import SFTTrainer, SFTConfig
-
-VARIANTS = {
-    "1.0":     dict(base="meta-llama/Llama-3.1-8B-Instruct",   r=16, epochs=3, lr=2e-4),
-    "1.1-pro": dict(base="mistralai/Mistral-Nemo-Instruct-2407", r=32, epochs=3, lr=1e-4),
-}
-v = VARIANTS[sys.argv[1] if len(sys.argv) > 1 else "1.0"]
-
-bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
-                         bnb_4bit_compute_dtype=torch.bfloat16)
-tok = AutoTokenizer.from_pretrained(v["base"])
-tok.pad_token = tok.pad_token or tok.eos_token
-model = AutoModelForCausalLM.from_pretrained(v["base"], quantization_config=bnb, device_map="auto")
-
-ds = load_dataset("json", data_files="data/train.jsonl", split="train")
-lora = LoraConfig(r=v["r"], lora_alpha=v["r"] * 2, lora_dropout=0.05, task_type="CAUSAL_LM",
-                  target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"])
-cfg = SFTConfig(output_dir=f"out/blue-{sys.argv[1] if len(sys.argv)>1 else '1.0'}",
-                num_train_epochs=v["epochs"], learning_rate=v["lr"],
-                per_device_train_batch_size=2, gradient_accumulation_steps=8,
-                bf16=True, logging_steps=10, save_strategy="epoch", max_seq_length=2048)
-
-SFTTrainer(model=model, args=cfg, train_dataset=ds, peft_config=lora, processing_class=tok).train()
-model.save_pretrained(cfg.output_dir + "/adapter")` },
-  export: { title: '4 · Export & Ollama', lang: 'bash', code: `# Adapter in das Basismodell mischen, nach GGUF konvertieren, in Ollama registrieren
-python - <<'PY'
-from peft import AutoPeftModelForCausalLM
-m = AutoPeftModelForCausalLM.from_pretrained("out/blue-1.0/adapter").merge_and_unload()
-m.save_pretrained("out/blue-1.0/merged")
-PY
-git clone https://github.com/ggerganov/llama.cpp && pip install -r llama.cpp/requirements.txt
-python llama.cpp/convert_hf_to_gguf.py out/blue-1.0/merged --outfile blue-ai-1.0.gguf --outtype q8_0
-
-# Modelfile.blue10
-cat > Modelfile.blue10 <<'EOF'
-FROM ./blue-ai-1.0.gguf
-PARAMETER temperature 0.7
-PARAMETER top_p 0.9
-PARAMETER num_ctx 4096
-SYSTEM """Du bist Blue AI 1.0, ein schneller, präziser Assistent."""
-EOF
-ollama create blue-ai:1.0 -f Modelfile.blue10
-ollama run blue-ai:1.0 "Hallo!"
-
-# Für 1.1 Pro dasselbe mit "1.1-pro", num_ctx 8192 und Tag blue-ai:1.1-pro` },
-  proxy: { title: '5 · Node-Proxy', lang: 'javascript', code: `// server.js – optional: liefert index.html aus und leitet /api/* an Ollama weiter.
-// Nutzen, wenn die Seite auf Vercel/HTTPS liegt und Ollama nicht direkt erreichbar ist.
-// Start: node server.js   (Node >= 18)
-import http from 'node:http';
-import { readFile } from 'node:fs/promises';
-
-const OLLAMA = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-http.createServer(async (req, res) => {
-  if (req.url.startsWith('/api/')) {
-    const body = ['POST','PUT'].includes(req.method) ? await new Promise(r => { let d=''; req.on('data', c => d += c); req.on('end', () => r(d)); }) : undefined;
-    const up = await fetch(OLLAMA + req.url, { method: req.method, headers: { 'Content-Type': 'application/json' }, body });
-    res.writeHead(up.status, { 'Content-Type': up.headers.get('content-type') || 'application/json' });
-    for await (const chunk of up.body) res.write(chunk);
-    return res.end();
-  }
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(await readFile(new URL('./index.html', import.meta.url)));
-}).listen(3000, () => console.log('Blue AI auf http://localhost:3000'));
-// In den Einstellungen dann als Endpoint "http://localhost:3000" eintragen.` }
-};
-
 /* ---------- Rendering ---------- */
 function render() {
   if (!S.user) return renderAuth();
@@ -308,28 +216,23 @@ function render() {
   $('#app').innerHTML = `
   <aside id="side" class="glass fixed md:static inset-y-0 left-0 z-40 w-72 max-w-[85vw] flex flex-col p-3 gap-2 transition-transform ${S.sidebar ? '' : '-translate-x-full md:translate-x-0'}">
     <div class="flex items-center gap-2 px-2 py-2">
-      <div class="w-9 h-9 rounded-xl btn grid place-items-center"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
-      <span class="font-bold text-lg">Blue AI</span>
+      <span class="font-semibold text-lg">Blue AI</span>
     </div>
-    <button id="new" class="btn rounded-xl py-2.5 flex items-center justify-center gap-2 font-semibold"><i data-lucide="plus" class="w-4 h-4"></i>Neuer Chat</button>
-    <nav class="flex gap-1 text-sm">
-      <button data-view="chat" class="ghost flex-1 rounded-lg py-2 ${S.view==='chat'?'bg-white/10':''}">Chat</button>
-      <button data-view="train" class="ghost flex-1 rounded-lg py-2 ${S.view==='train'?'bg-white/10':''}">Training</button>
-    </nav>
+    <button id="new" class="ghost rounded-lg px-3 py-2.5 flex items-center gap-2 text-sm"><i data-lucide="square-pen" class="w-4 h-4"></i>Neuer Chat</button>
     <div class="text-xs text-[color:var(--mute)] px-2 pt-2">Verlauf</div>
     <div id="hist" class="flex-1 overflow-y-auto space-y-1"></div>
-    <button id="acc" class="ghost rounded-xl p-2 flex items-center gap-3 text-left border border-[color:var(--line)]">
-      <div class="w-9 h-9 rounded-full btn grid place-items-center font-bold">${esc(u.name[0].toUpperCase())}</div>
+    <button id="acc" class="ghost rounded-xl p-2 flex items-center gap-3 text-left">
+      <div class="w-8 h-8 rounded-full bg-[#3d7bff] text-white grid place-items-center text-sm font-semibold">${esc(u.name[0].toUpperCase())}</div>
       <div class="min-w-0"><div class="truncate text-sm font-semibold">${esc(u.name)}</div><div class="truncate text-xs text-[color:var(--mute)]">${esc(u.email)}</div></div>
     </button>
   </aside>
   <div id="scrim" class="fixed inset-0 bg-black/50 z-30 ${S.sidebar?'':'hidden'} md:hidden"></div>
   <main class="flex-1 min-w-0 flex flex-col">
-    <header class="flex items-center gap-2 p-3 border-b border-[color:var(--line)]">
+    <header class="flex items-center gap-2 p-2 md:px-4">
       <button id="menu" class="md:hidden ghost p-2 rounded-lg" aria-label="Menü"><i data-lucide="menu" class="w-5 h-5"></i></button>
       <div class="relative">
-        <button id="modelBtn" class="ghost rounded-lg px-3 py-2 flex items-center gap-2 text-sm font-semibold">${esc(mdl.name)}<i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-        <div id="modelMenu" class="hidden absolute top-full mt-2 left-0 glow border border-[color:var(--line)] bg-[color:var(--panel)] rounded-xl p-1 w-72 z-30">
+        <button id="modelBtn" class="ghost rounded-lg px-3 py-2 flex items-center gap-2 text-lg font-medium">${esc(mdl.name)}<i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+        <div id="modelMenu" class="hidden absolute top-full mt-2 left-0 glow border border-[color:var(--line)] bg-[#2f2f2f] rounded-xl p-1 w-72 z-30">
           ${Object.entries(MODELS).map(([k, m]) => `<button data-model="${k}" class="ghost w-full text-left rounded-lg p-3 ${k===S.data.model?'bg-white/10':''}"><div class="font-semibold text-sm">${m.name}</div><div class="text-xs text-[color:var(--mute)]">${m.desc} · <span class="mono">${S.data.settings.backend === 'ollama' ? esc(S.data.settings.tags[k]) : 'direkt im Browser'}</span></div></button>`).join('')}
         </div>
       </div>
@@ -337,7 +240,7 @@ function render() {
       <button id="cfg" class="ghost p-2 rounded-lg" aria-label="Modell-Einstellungen"><i data-lucide="sliders-horizontal" class="w-5 h-5"></i></button>
     </header>
     <section id="body" class="flex-1 overflow-y-auto"></section>
-    <footer id="foot" class="p-3"></footer>
+    <footer id="foot" class="px-3 pb-4 pt-1"></footer>
   </main>`;
   renderHistory(); renderBody(); bindShell(); icons();
 }
@@ -353,12 +256,11 @@ function renderHistory() {
 
 function renderBody() {
   const b = $('#body'), f = $('#foot');
-  if (S.view === 'train') { f.innerHTML = ''; return renderTrain(b); }
-  f.innerHTML = `<div class="max-w-3xl mx-auto glass rounded-2xl p-2 flex items-end gap-2">
-    <textarea id="inp" rows="1" placeholder="Nachricht an ${esc(MODELS[S.data.model].name)}" class="!border-0 !bg-transparent resize-none max-h-48"></textarea>
-    <button id="sendBtn" class="btn rounded-xl p-2.5" aria-label="Senden"></button></div>
-    <p class="text-center text-xs text-[color:var(--mute)] mt-2">${S.data.settings.backend === 'ollama' ? 'Läuft lokal über ' + esc(S.data.settings.endpoint) : 'Läuft komplett in deinem Browser'}. Prüfe wichtige Antworten selbst.</p>`;
-  b.innerHTML = '<div id="msgs" class="max-w-3xl mx-auto p-4 md:p-6 space-y-6"></div>';
+  f.innerHTML = `<div class="max-w-3xl mx-auto glass rounded-[26px] pl-4 pr-2 py-1.5 flex items-end gap-2">
+    <textarea id="inp" rows="1" placeholder="Frag Blue AI etwas" class="bare resize-none max-h-48"></textarea>
+    <button id="sendBtn" class="btn rounded-full p-2 shrink-0 mb-1" aria-label="Senden"></button></div>
+    <p class="text-center text-xs text-[color:var(--mute)] mt-2 px-2">${S.data.settings.backend === 'ollama' ? 'Läuft lokal über ' + esc(S.data.settings.endpoint) : 'Läuft komplett in deinem Browser'}. Prüfe wichtige Antworten selbst.</p>`;
+  b.innerHTML = '<div id="msgs" class="max-w-3xl mx-auto px-4 py-6 space-y-7"></div>';
   const inp = $('#inp');
   inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
   inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); go(); } });
@@ -378,29 +280,14 @@ function renderMessages(keepScroll) {
   const box = $('#msgs'); if (!box) return; const c = chat(), body = $('#body');
   const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 120;
   if (!c || !c.messages.length) {
-    box.innerHTML = `<div class="text-center pt-[14vh]"><div class="w-16 h-16 mx-auto rounded-2xl btn grid place-items-center glow"><i data-lucide="sparkles" class="w-8 h-8"></i></div>
-      <h1 class="text-2xl md:text-3xl font-bold mt-6">Hallo ${esc(S.user.name.split(' ')[0])}, was möchtest du wissen?</h1>
-      <p class="text-[color:var(--mute)] mt-2">Deine Anfragen gehen ausschließlich an dein lokales Modell.</p></div>`; icons(); return;
+    box.innerHTML = `<div class="text-center pt-[22vh]"><h1 class="text-3xl font-medium">Wie kann ich dir helfen, ${esc(S.user.name.split(' ')[0])}?</h1></div>`; icons(); return;
   }
   box.innerHTML = c.messages.map((m, i) => m.role === 'user'
-    ? `<div class="flex justify-end"><div class="glass rounded-2xl rounded-br-md px-4 py-3 max-w-[85%] whitespace-pre-wrap">${esc(m.content)}</div></div>`
-    : `<div class="flex gap-3"><div class="w-8 h-8 shrink-0 rounded-lg btn grid place-items-center"><i data-lucide="sparkles" class="w-4 h-4"></i></div>
-       <div class="min-w-0 flex-1"><div class="md ${m.error ? 'text-red-300' : ''}">${m.content ? md(m.content) : '<span class="dot">●</span><span class="dot">●</span><span class="dot">●</span>'}</div>${m.content && !(S.busy && i === c.messages.length - 1) ? `<div class="flex gap-1 mt-1 text-[color:var(--mute)]">
-        <button data-act="up" data-i="${i}" class="ghost p-1.5 rounded-lg ${m.rating==='up'?'text-blue-400':''}" aria-label="Gute Antwort"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
-        <button data-act="down" data-i="${i}" class="ghost p-1.5 rounded-lg ${m.rating==='down'?'text-red-400':''}" aria-label="Schlechte Antwort"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
-        ${i === c.messages.length - 1 ? '<button data-act="regen" class="ghost p-1.5 rounded-lg" aria-label="Neu generieren"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>' : ''}</div>` : ''}</div></div>`).join('');
+    ? `<div class="flex justify-end"><div class="bg-[#2f2f2f] rounded-3xl px-5 py-2.5 max-w-[80%] whitespace-pre-wrap leading-relaxed">${esc(m.content)}</div></div>`
+    : `<div><div class="md ${m.error ? 'text-red-300' : ''}">${m.content ? md(m.content) : '<span class="dot">●</span><span class="dot">●</span><span class="dot">●</span>'}</div>${m.content && !m.error && !(S.busy && i === c.messages.length - 1) ? `<div class="flex gap-1 mt-1 text-[color:var(--mute)]">
+        <button data-act="copy" data-i="${i}" class="ghost p-1.5 rounded-lg" aria-label="Kopieren"><i data-lucide="copy" class="w-4 h-4"></i></button>
+        ${i === c.messages.length - 1 ? '<button data-act="regen" class="ghost p-1.5 rounded-lg" aria-label="Neu generieren"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>' : ''}</div>` : ''}</div>`).join('');
   icons(); if (atBottom || !keepScroll) body.scrollTop = body.scrollHeight;
-}
-
-function renderTrain(b) {
-  const keys = Object.keys(TRAIN); S.tab = S.tab || keys[0];
-  b.innerHTML = `<div class="max-w-4xl mx-auto p-4 md:p-6">
-    <h1 class="text-2xl font-bold">Blue AI selbst trainieren</h1>
-    <p class="text-[color:var(--mute)] mt-2 max-w-prose leading-relaxed">Blue AI 1.0 und 1.1 Pro sind lokale Ollama-Modelle. Mit diesen Schritten erzeugst du eigene Varianten per QLoRA-Fine-Tuning auf Basis offener Modelle und bindest sie unter den Tags <span class="mono">${esc(S.data.settings.tags['blue-1.0'])}</span> und <span class="mono">${esc(S.data.settings.tags['blue-1.1pro'])}</span> ein.</p>
-    <div class="flex gap-1 overflow-x-auto mt-6 pb-1">${keys.map(k => `<button data-tab="${k}" class="ghost whitespace-nowrap rounded-lg px-3 py-2 text-sm ${k===S.tab?'bg-white/10 font-semibold':''}">${TRAIN[k].title}</button>`).join('')}</div>
-    <div class="md"><pre><code class="language-${TRAIN[S.tab].lang}">${esc(TRAIN[S.tab].code)}</code><button class="copy" data-copy="1">Kopieren</button></pre></div>
-    <div class="glass rounded-xl p-4 mt-4 text-sm leading-relaxed text-[color:var(--mute)]">Hardware-Richtwert: 8B-Modelle brauchen für QLoRA etwa 12–16 GB VRAM, 12B-Modelle eher 24 GB. Prüfe vor dem Training die Lizenz des Basismodells.</div></div>`;
-  b.querySelectorAll('[data-tab]').forEach(x => x.onclick = () => { S.tab = x.dataset.tab; renderTrain(b); icons(); });
 }
 
 /* ---------- Bindings ---------- */
@@ -408,7 +295,6 @@ function bindShell() {
   $('#new').onclick = () => { S.sidebar = false; newChat(); };
   $('#menu').onclick = () => { S.sidebar = true; render(); };
   $('#scrim').onclick = () => { S.sidebar = false; render(); };
-  document.querySelectorAll('[data-view]').forEach(x => x.onclick = () => { S.view = x.dataset.view; S.sidebar = false; render(); });
   $('#modelBtn').onclick = e => { e.stopPropagation(); $('#modelMenu').classList.toggle('hidden'); };
   document.querySelectorAll('[data-model]').forEach(x => x.onclick = () => { S.data.model = x.dataset.model; save(); render(); });
   $('#cfg').onclick = openSettings; $('#acc').onclick = openAccount;
@@ -420,7 +306,7 @@ function bindShell() {
 }
 document.addEventListener('click', e => {
   const a = e.target.closest('[data-act]');
-  if (a) { if (a.dataset.act === 'regen') regen(); else rate(+a.dataset.i, a.dataset.act); }
+  if (a) { if (a.dataset.act === 'regen') regen(); else navigator.clipboard.writeText(chat().messages[+a.dataset.i].content).then(() => toast('Kopiert.')).catch(() => toast('Kopieren nicht möglich.')); }
   if (!e.target.closest('#modelBtn')) $('#modelMenu')?.classList.add('hidden');
   const c = e.target.closest('[data-copy]');
   if (c) { const t = c.parentElement.querySelector('code').innerText; navigator.clipboard.writeText(t).then(() => { c.textContent = 'Kopiert'; setTimeout(() => c.textContent = 'Kopieren', 1400); }).catch(() => toast('Kopieren nicht möglich.')); }
@@ -428,7 +314,7 @@ document.addEventListener('click', e => {
 
 /* ---------- Modale ---------- */
 function modal(html, wide) {
-  $('#modal-root').innerHTML = `<div class="fixed inset-0 z-50 bg-black/65 grid place-items-center p-4" id="mbg"><div class="glow rounded-2xl p-6 w-full border border-[color:var(--line)] bg-[color:var(--panel)] ${wide ? 'max-w-xl' : 'max-w-md'} max-h-[92vh] overflow-y-auto" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#modal-root').innerHTML = `<div class="fixed inset-0 z-50 bg-black/65 grid place-items-center p-4" id="mbg"><div class="glow rounded-2xl p-6 w-full border border-[color:var(--line)] bg-[#2f2f2f] ${wide ? 'max-w-xl' : 'max-w-md'} max-h-[92vh] overflow-y-auto" role="dialog" aria-modal="true">${html}</div></div>`;
   $('#mbg').onclick = e => { if (e.target.id === 'mbg' && S.user) closeModal(); };
   icons();
 }
@@ -437,8 +323,7 @@ const closeModal = () => $('#modal-root').innerHTML = '';
 function renderAuth() {
   $('#app').innerHTML = ''; let mode = 'login';
   const draw = () => {
-    modal(`<div class="text-center mb-5"><div class="w-14 h-14 mx-auto rounded-2xl btn grid place-items-center"><i data-lucide="sparkles" class="w-7 h-7"></i></div>
-      <h2 class="text-xl font-bold mt-4">${mode === 'login' ? 'Bei Blue AI anmelden' : 'Blue AI-Konto erstellen'}</h2></div>
+    modal(`<div class="text-center mb-6"><h2 class="text-2xl font-semibold">${mode === 'login' ? 'Bei Blue AI anmelden' : 'Blue AI-Konto erstellen'}</h2></div>
       <div class="space-y-3">
         ${mode === 'register' ? '<input id="a-name" placeholder="Name" autocomplete="name">' : ''}
         <input id="a-mail" type="email" placeholder="E-Mail" autocomplete="email">
@@ -497,14 +382,12 @@ function openAccount() {
       <div class="text-[color:var(--mute)]">${esc(u.email)} · seit ${new Date(u.created).toLocaleDateString('de-DE')}</div>
       <button id="ac-save" class="btn w-full rounded-xl py-2.5 font-semibold">Name speichern</button>
       <button id="ac-exp" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Chats exportieren (JSON)</button>
-      <button id="ac-train" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Gute Antworten als Trainingsdaten (JSONL)</button>
       <button id="ac-out" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Abmelden</button>
       <button id="ac-del" class="w-full rounded-xl py-2.5 border border-red-400/40 text-red-300 hover:bg-red-500/10">Konto und alle Chats löschen</button>
     </div>`);
   $('#x').onclick = closeModal;
   $('#ac-save').onclick = () => { const n = $('#ac-name').value.trim(); if (!n) return toast('Name darf nicht leer sein.'); Auth.update({ name: n }); S.user = Auth.current(); closeModal(); render(); toast('Name gespeichert.'); };
   $('#ac-exp').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S.data.chats, null, 2)], { type: 'application/json' })); a.download = 'blue-ai-chats.json'; a.click(); URL.revokeObjectURL(a.href); };
-  $('#ac-train').onclick = exportTraining;
   $('#ac-out').onclick = () => { Auth.logout(); location.reload(); };
   $('#ac-del').onclick = () => { if (confirm('Konto und alle Chats unwiderruflich löschen?')) { Auth.remove(); location.reload(); } };
 }
