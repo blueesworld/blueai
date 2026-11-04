@@ -68,9 +68,29 @@ const MODELS = {
   'blue-1.0':   { name: 'Blue AI 1.0',     desc: 'Schnell und ressourcenschonend', tag: 'blue-ai:1.0' },
   'blue-1.1pro':{ name: 'Blue AI 1.1 Pro', desc: 'Mehr Kontext, präzisere Antworten', tag: 'blue-ai:1.1-pro' }
 };
+const OLD_SYSTEM = 'Du bist Blue AI, ein hilfreicher, präziser Assistent. Antworte in der Sprache des Nutzers.';
+const DEFAULT_SYSTEM = [
+  'Du bist Blue AI, ein hilfreicher, ehrlicher und präziser Assistent.',
+  '- Antworte in der Sprache des Nutzers, klar und ohne Füllfloskeln.',
+  '- Beantworte zuerst die eigentliche Frage, danach Details oder Beispiele.',
+  '- Wenn dir Informationen fehlen oder du unsicher bist, sag das offen, statt etwas zu erfinden.',
+  '- Bei unklaren Fragen stelle höchstens eine kurze Rückfrage.',
+  '- Code kommt in Markdown-Codeblöcken mit Sprachangabe, Rechenwege Schritt für Schritt.'
+].join('\n');
+const MODEL_EXTRA = {
+  'blue-1.0': 'Halte Antworten kurz und direkt.',
+  'blue-1.1pro': 'Denke Probleme Schritt für Schritt durch, strukturiere längere Antworten mit Überschriften und Listen und prüfe dein Ergebnis, bevor du antwortest.'
+};
+/* Grobe Token-Schätzung (ca. 3,5 Zeichen pro Token) und Kontext-Beschnitt, damit lange Chats nicht überlaufen */
+const approxTok = t => Math.ceil(t.length / 3.5);
+function fitHistory(msgs, budget) {
+  const out = []; let used = 0;
+  for (let i = msgs.length - 1; i >= 0; i--) { used += approxTok(msgs[i].content); if (used > budget && out.length) break; out.unshift(msgs[i]); }
+  return out;
+}
 const DEFAULTS = {
   endpoint: 'http://localhost:11434', temperature: 0.7, top_p: 0.9, num_ctx: 4096,
-  system: 'Du bist Blue AI, ein hilfreicher, präziser Assistent. Antworte in der Sprache des Nutzers.',
+  system: DEFAULT_SYSTEM,
   tags: { 'blue-1.0': MODELS['blue-1.0'].tag, 'blue-1.1pro': MODELS['blue-1.1pro'].tag }
 };
 
@@ -107,6 +127,7 @@ const Auth = {
 const S = { user: null, data: null, view: 'chat', busy: false, ctrl: null, sidebar: false };
 function loadData() {
   S.data = store.get('blue_data_' + S.user.id, null) || { chats: [], active: null, model: 'blue-1.1pro', settings: structuredClone(DEFAULTS) };
+  if (S.data.settings?.system === OLD_SYSTEM) S.data.settings.system = DEFAULT_SYSTEM;
   S.data.settings = { ...structuredClone(DEFAULTS), ...S.data.settings, tags: { ...DEFAULTS.tags, ...(S.data.settings.tags || {}) } };
 }
 const save = () => store.set('blue_data_' + S.user.id, S.data);
@@ -122,12 +143,13 @@ async function send(text) {
   if (c.messages.length === 1) c.title = text.slice(0, 48);
   const reply = { role: 'assistant', content: '', model: S.data.model };
   c.messages.push(reply); S.busy = true; S.ctrl = new AbortController(); save(); renderMessages();
+  const sys = st.system + '\n\n' + MODEL_EXTRA[S.data.model];
   try {
     const res = await fetch(st.endpoint.replace(/\/$/, '') + '/api/chat', {
       method: 'POST', signal: S.ctrl.signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: st.tags[S.data.model], stream: true,
-        messages: [{ role: 'system', content: st.system }, ...c.messages.slice(0, -1).map(({ role, content }) => ({ role, content }))],
+        messages: [{ role: 'system', content: sys }, ...fitHistory(c.messages.slice(0, -1), Math.floor(st.num_ctx * 0.7) - approxTok(sys)).map(({ role, content }) => ({ role, content }))],
         options: { temperature: +st.temperature, top_p: +st.top_p, num_ctx: +st.num_ctx }
       })
     });
@@ -143,6 +165,21 @@ async function send(text) {
     else reply.error = true, reply.content = 'Keine Verbindung zum lokalen Modell.\n\n**Details:** ' + e.message + '\n\n1. Läuft Ollama? `ollama serve`\n2. Erlaubt Ollama diese Seite? `OLLAMA_ORIGINS="*" ollama serve`\n3. Stimmt der Endpoint in den Einstellungen (aktuell `' + st.endpoint + '`)?\n4. Existiert das Modell? `ollama list`';
   }
   S.busy = false; S.ctrl = null; save(); renderMessages(); updateSend();
+}
+
+function regen() {
+  const c = chat(); if (!c || S.busy) return;
+  while (c.messages.length && c.messages.at(-1).role === 'assistant') c.messages.pop();
+  const last = c.messages.pop(); if (last) send(last.content);
+}
+function rate(i, v) { const m = chat().messages[i]; m.rating = m.rating === v ? null : v; save(); renderMessages(true); }
+/* Gut bewertete Antworten als Trainingsdaten (Chat-JSONL, direkt für train_lora.py nutzbar) */
+function exportTraining() {
+  const rows = [];
+  S.data.chats.forEach(c => c.messages.forEach((m, i) => { if (m.rating === 'up' && m.role === 'assistant') rows.push(JSON.stringify({ messages: [{ role: 'system', content: S.data.settings.system }, ...c.messages.slice(0, i + 1).map(({ role, content }) => ({ role, content }))] })); }));
+  if (!rows.length) return toast('Noch keine Antworten mit Daumen hoch bewertet.');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'application/jsonl' })); a.download = 'train.jsonl'; a.click(); URL.revokeObjectURL(a.href);
+  toast(rows.length + ' Beispiele exportiert.');
 }
 
 /* ---------- Training-Inhalte (kopierbar) ---------- */
@@ -310,10 +347,13 @@ function renderMessages(keepScroll) {
       <h1 class="text-2xl md:text-3xl font-bold mt-6">Hallo ${esc(S.user.name.split(' ')[0])}, was möchtest du wissen?</h1>
       <p class="text-[color:var(--mute)] mt-2">Deine Anfragen gehen ausschließlich an dein lokales Modell.</p></div>`; icons(); return;
   }
-  box.innerHTML = c.messages.map(m => m.role === 'user'
+  box.innerHTML = c.messages.map((m, i) => m.role === 'user'
     ? `<div class="flex justify-end"><div class="glass rounded-2xl rounded-br-md px-4 py-3 max-w-[85%] whitespace-pre-wrap">${esc(m.content)}</div></div>`
     : `<div class="flex gap-3"><div class="w-8 h-8 shrink-0 rounded-lg btn grid place-items-center"><i data-lucide="sparkles" class="w-4 h-4"></i></div>
-       <div class="md min-w-0 flex-1 ${m.error ? 'text-red-300' : ''}">${m.content ? md(m.content) : '<span class="dot">●</span><span class="dot">●</span><span class="dot">●</span>'}</div></div>`).join('');
+       <div class="min-w-0 flex-1"><div class="md ${m.error ? 'text-red-300' : ''}">${m.content ? md(m.content) : '<span class="dot">●</span><span class="dot">●</span><span class="dot">●</span>'}</div>${m.content && !(S.busy && i === c.messages.length - 1) ? `<div class="flex gap-1 mt-1 text-[color:var(--mute)]">
+        <button data-act="up" data-i="${i}" class="ghost p-1.5 rounded-lg ${m.rating==='up'?'text-blue-400':''}" aria-label="Gute Antwort"><i data-lucide="thumbs-up" class="w-4 h-4"></i></button>
+        <button data-act="down" data-i="${i}" class="ghost p-1.5 rounded-lg ${m.rating==='down'?'text-red-400':''}" aria-label="Schlechte Antwort"><i data-lucide="thumbs-down" class="w-4 h-4"></i></button>
+        ${i === c.messages.length - 1 ? '<button data-act="regen" class="ghost p-1.5 rounded-lg" aria-label="Neu generieren"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>' : ''}</div>` : ''}</div></div>`).join('');
   icons(); if (atBottom || !keepScroll) body.scrollTop = body.scrollHeight;
 }
 
@@ -344,6 +384,8 @@ function bindShell() {
   };
 }
 document.addEventListener('click', e => {
+  const a = e.target.closest('[data-act]');
+  if (a) { if (a.dataset.act === 'regen') regen(); else rate(+a.dataset.i, a.dataset.act); }
   if (!e.target.closest('#modelBtn')) $('#modelMenu')?.classList.add('hidden');
   const c = e.target.closest('[data-copy]');
   if (c) { const t = c.parentElement.querySelector('code').innerText; navigator.clipboard.writeText(t).then(() => { c.textContent = 'Kopiert'; setTimeout(() => c.textContent = 'Kopieren', 1400); }).catch(() => toast('Kopieren nicht möglich.')); }
@@ -419,12 +461,14 @@ function openAccount() {
       <div class="text-[color:var(--mute)]">${esc(u.email)} · seit ${new Date(u.created).toLocaleDateString('de-DE')}</div>
       <button id="ac-save" class="btn w-full rounded-xl py-2.5 font-semibold">Name speichern</button>
       <button id="ac-exp" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Chats exportieren (JSON)</button>
+      <button id="ac-train" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Gute Antworten als Trainingsdaten (JSONL)</button>
       <button id="ac-out" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Abmelden</button>
       <button id="ac-del" class="w-full rounded-xl py-2.5 border border-red-400/40 text-red-300 hover:bg-red-500/10">Konto und alle Chats löschen</button>
     </div>`);
   $('#x').onclick = closeModal;
   $('#ac-save').onclick = () => { const n = $('#ac-name').value.trim(); if (!n) return toast('Name darf nicht leer sein.'); Auth.update({ name: n }); S.user = Auth.current(); closeModal(); render(); toast('Name gespeichert.'); };
   $('#ac-exp').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S.data.chats, null, 2)], { type: 'application/json' })); a.download = 'blue-ai-chats.json'; a.click(); URL.revokeObjectURL(a.href); };
+  $('#ac-train').onclick = exportTraining;
   $('#ac-out').onclick = () => { Auth.logout(); location.reload(); };
   $('#ac-del').onclick = () => { if (confirm('Konto und alle Chats unwiderruflich löschen?')) { Auth.remove(); location.reload(); } };
 }
