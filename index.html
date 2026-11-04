@@ -1,429 +1,432 @@
 <!DOCTYPE html>
-<html lang="de" class="dark">
+<html lang="de" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blue AI Workspace</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#eff6ff',
-              100: '#dbeafe',
-              400: '#60a5fa',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              800: '#1e40af',
-              900: '#1e3a8a',
-              950: '#0b1329',
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body {
-      background: linear-gradient(135deg, #030712 0%, #061127 40%, #001f54 100%);
-      background-attachment: fixed;
-    }
-    .btn-blue-gradient {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #0284c7 100%);
-      transition: all 0.25s ease;
-    }
-    .btn-blue-gradient:hover {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #0369a1 100%);
-      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
-    }
-    .glass-card {
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 25, 47, 0.85) 100%);
-      border: 1px solid rgba(59, 130, 246, 0.25);
-      backdrop-filter: blur(16px);
-    }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
-    pre code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blue AI</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#e8f0ff;--mute:#8aa0c8;--line:rgba(120,160,255,.16);--glass:rgba(14,26,58,.62);--accent:#3b82ff;--glow:rgba(59,130,255,.35)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:radial-gradient(1200px 700px at 15% -10%,#143a8f 0%,transparent 60%),radial-gradient(900px 600px at 100% 110%,#0b2a6b 0%,transparent 55%),#040b1f;background-attachment:fixed;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.glass{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line)}
+.glow{box-shadow:0 0 0 1px var(--line),0 10px 40px -10px var(--glow)}
+.btn{background:linear-gradient(135deg,#2f6bff,#1d4fd8);box-shadow:0 6px 24px -8px var(--glow);transition:filter .15s}
+.btn:hover{filter:brightness(1.12)}
+.ghost:hover{background:rgba(80,130,255,.12)}
+input,textarea,select{background:rgba(5,14,38,.7);border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:.6rem .8rem;width:100%;font:inherit;font-size:.9rem}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mono{font-family:'JetBrains Mono',monospace}
+.md p{margin:.5em 0;line-height:1.7}.md ul{list-style:disc;padding-left:1.4em}.md ol{list-style:decimal;padding-left:1.4em}
+.md code:not(pre code){background:rgba(80,130,255,.18);padding:.1em .4em;border-radius:6px;font-size:.85em}
+.md pre{position:relative;background:#030a1c;border:1px solid var(--line);border-radius:12px;padding:1rem;overflow-x:auto;margin:.8em 0;font-size:.82rem}
+.md pre code{font-family:'JetBrains Mono',monospace}
+.copy{position:absolute;top:.5rem;right:.5rem;font-size:.7rem;padding:.2rem .5rem;border-radius:8px;background:rgba(80,130,255,.2)}
+.dot{animation:p 1.2s infinite}.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes p{0%,80%,100%{opacity:.2}40%{opacity:1}}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(100,140,255,.25);border-radius:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
 </head>
-<body class="text-slate-100 font-sans h-screen flex overflow-hidden antialiased">
+<body>
 
-  <!-- AUTH MODAL (Login / Register) -->
-  <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 hidden">
-    <div class="glass-card w-full max-w-md rounded-2xl p-6 md:p-8 shadow-2xl relative border border-blue-500/30">
-      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
+<div id="app" class="h-full flex"></div>
+<div id="modal-root"></div>
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 glass rounded-xl px-4 py-2 text-sm hidden z-[100]"></div>
 
-      <!-- TAB SWITCHER -->
-      <div class="flex border-b border-blue-900/50 mb-6">
-        <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-blue-500 text-blue-400 transition">Anmelden</button>
-        <button id="tab-register-btn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">Registrieren</button>
-      </div>
+<script>
+/* ============================================================
+   Blue AI – lokale KI-Oberfläche (Ollama / OpenAI-kompatibel lokal)
+   Keine externen KI-APIs. Alle Daten bleiben im Browser (localStorage).
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { toast('Speichern fehlgeschlagen (Speicher voll oder blockiert).'); } }
+};
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 3200); }
+const icons = () => window.lucide && lucide.createIcons();
 
-      <!-- LOGIN FORM -->
-      <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-blue-300 mb-1">E-Mail Adresse</label>
-          <input type="email" required placeholder="name@beispiel.de" class="w-full bg-slate-900/90 border border-blue-800/60 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-blue-300 mb-1">Passwort</label>
-          <input type="password" required placeholder="••••••••" class="w-full bg-slate-900/90 border border-blue-800/60 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-        </div>
-        <button type="submit" class="w-full btn-blue-gradient text-white rounded-xl py-3 font-semibold text-sm shadow-lg mt-2">Einloggen</button>
-      </form>
+/* ---------- Modelle & Standardwerte ---------- */
+const MODELS = {
+  'blue-1.0':   { name: 'Blue AI 1.0',     desc: 'Schnell und ressourcenschonend', tag: 'blue-ai:1.0' },
+  'blue-1.1pro':{ name: 'Blue AI 1.1 Pro', desc: 'Mehr Kontext, präzisere Antworten', tag: 'blue-ai:1.1-pro' }
+};
+const DEFAULTS = {
+  endpoint: 'http://localhost:11434', temperature: 0.7, top_p: 0.9, num_ctx: 4096,
+  system: 'Du bist Blue AI, ein hilfreicher, präziser Assistent. Antworte in der Sprache des Nutzers.',
+  tags: { 'blue-1.0': MODELS['blue-1.0'].tag, 'blue-1.1pro': MODELS['blue-1.1pro'].tag }
+};
 
-      <!-- REGISTER FORM -->
-      <form id="register-form" onsubmit="handleAuth(event, 'register')" class="space-y-4 hidden">
-        <div>
-          <label class="block text-xs font-semibold text-blue-300 mb-1">Vollständiger Name</label>
-          <input type="text" id="reg-name" required placeholder="Max Mustermann" class="w-full bg-slate-900/90 border border-blue-800/60 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-blue-300 mb-1">E-Mail Adresse</label>
-          <input type="email" required placeholder="name@beispiel.de" class="w-full bg-slate-900/90 border border-blue-800/60 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-blue-300 mb-1">Passwort erstellen</label>
-          <input type="password" required placeholder="••••••••" class="w-full bg-slate-900/90 border border-blue-800/60 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-        </div>
-        <button type="submit" class="w-full btn-blue-gradient text-white rounded-xl py-3 font-semibold text-sm shadow-lg mt-2">Konto Erstellen</button>
-      </form>
+/* ---------- Auth (nur clientseitig, siehe Hinweis im Register-Dialog) ---------- */
+async function hash(pw, salt) {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(salt), iterations: 150000, hash: 'SHA-256' }, k, 256);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const Auth = {
+  users: () => store.get('blue_users', {}),
+  session: () => store.get('blue_session', null),
+  async register(name, email, pw) {
+    const users = this.users(); email = email.trim().toLowerCase();
+    if (!name.trim() || !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Bitte gültigen Namen und E-Mail eingeben.');
+    if (pw.length < 8) throw new Error('Das Passwort braucht mindestens 8 Zeichen.');
+    if (users[email]) throw new Error('Für diese E-Mail existiert bereits ein Konto.');
+    const salt = uid();
+    users[email] = { id: uid(), name: name.trim(), email, salt, hash: await hash(pw, salt), created: Date.now() };
+    store.set('blue_users', users); store.set('blue_session', { email });
+  },
+  async login(email, pw) {
+    email = email.trim().toLowerCase(); const u = this.users()[email];
+    if (!u || await hash(pw, u.salt) !== u.hash) throw new Error('E-Mail oder Passwort stimmt nicht.');
+    store.set('blue_session', { email });
+  },
+  logout() { localStorage.removeItem('blue_session'); },
+  current() { const s = this.session(); return s ? this.users()[s.email] || null : null; },
+  update(patch) { const u = this.current(); const users = this.users(); users[u.email] = { ...u, ...patch }; store.set('blue_users', users); },
+  remove() { const u = this.current(); const users = this.users(); delete users[u.email]; store.set('blue_users', users); localStorage.removeItem('blue_data_' + u.id); this.logout(); }
+};
+
+/* ---------- Zustand pro Nutzer ---------- */
+const S = { user: null, data: null, view: 'chat', busy: false, ctrl: null, sidebar: false };
+function loadData() {
+  S.data = store.get('blue_data_' + S.user.id, null) || { chats: [], active: null, model: 'blue-1.1pro', settings: structuredClone(DEFAULTS) };
+  S.data.settings = { ...structuredClone(DEFAULTS), ...S.data.settings, tags: { ...DEFAULTS.tags, ...(S.data.settings.tags || {}) } };
+}
+const save = () => store.set('blue_data_' + S.user.id, S.data);
+const chat = () => S.data.chats.find(c => c.id === S.data.active);
+function newChat() { const c = { id: uid(), title: 'Neuer Chat', messages: [], created: Date.now() }; S.data.chats.unshift(c); S.data.active = c.id; S.view = 'chat'; save(); render(); }
+
+/* ---------- Chat gegen lokales Backend (Ollama /api/chat, NDJSON-Stream) ---------- */
+async function send(text) {
+  text = text.trim(); if (!text || S.busy) return;
+  if (!chat()) newChat();
+  const c = chat(), st = S.data.settings;
+  c.messages.push({ role: 'user', content: text });
+  if (c.messages.length === 1) c.title = text.slice(0, 48);
+  const reply = { role: 'assistant', content: '', model: S.data.model };
+  c.messages.push(reply); S.busy = true; S.ctrl = new AbortController(); save(); renderMessages();
+  try {
+    const res = await fetch(st.endpoint.replace(/\/$/, '') + '/api/chat', {
+      method: 'POST', signal: S.ctrl.signal, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: st.tags[S.data.model], stream: true,
+        messages: [{ role: 'system', content: st.system }, ...c.messages.slice(0, -1).map(({ role, content }) => ({ role, content }))],
+        options: { temperature: +st.temperature, top_p: +st.top_p, num_ctx: +st.num_ctx }
+      })
+    });
+    if (!res.ok) throw new Error('Server antwortete mit Status ' + res.status + (res.status === 404 ? ' – Modell „' + st.tags[S.data.model] + '“ ist nicht installiert (siehe Tab „Training“).' : ''));
+    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop();
+      for (const l of lines) { if (!l.trim()) continue; const j = JSON.parse(l); if (j.message?.content) { reply.content += j.message.content; renderMessages(true); } }
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') reply.content += reply.content ? '\n\n*(Abgebrochen)*' : '*(Abgebrochen)*';
+    else reply.error = true, reply.content = 'Keine Verbindung zum lokalen Modell.\n\n**Details:** ' + e.message + '\n\n1. Läuft Ollama? `ollama serve`\n2. Erlaubt Ollama diese Seite? `OLLAMA_ORIGINS="*" ollama serve`\n3. Stimmt der Endpoint in den Einstellungen (aktuell `' + st.endpoint + '`)?\n4. Existiert das Modell? `ollama list`';
+  }
+  S.busy = false; S.ctrl = null; save(); renderMessages(); updateSend();
+}
+
+/* ---------- Training-Inhalte (kopierbar) ---------- */
+const TRAIN = {
+  setup: { title: '1 · Setup', lang: 'bash', code: `# Ollama installieren (https://ollama.com) und Basismodell laden
+ollama pull llama3.1:8b        # Basis für Blue AI 1.0
+ollama pull mistral-nemo:12b   # Basis für Blue AI 1.1 Pro
+
+# Python-Umgebung für das Fine-Tuning (NVIDIA-GPU mit >= 16 GB VRAM empfohlen)
+python -m venv .venv && source .venv/bin/activate
+pip install torch transformers datasets peft trl bitsandbytes accelerate` },
+  data: { title: '2 · Datensatz', lang: 'json', code: `// data/train.jsonl – eine Zeile pro Beispiel (Chat-Format)
+{"messages":[{"role":"system","content":"Du bist Blue AI."},{"role":"user","content":"Wer bist du?"},{"role":"assistant","content":"Ich bin Blue AI, ein lokal laufender Assistent."}]}
+{"messages":[{"role":"user","content":"Erkläre Rekursion in einem Satz."},{"role":"assistant","content":"Rekursion heißt, dass eine Funktion sich selbst mit einem kleineren Problem aufruft, bis ein Basisfall erreicht ist."}]}
+// Faustregel: 500–5.000 saubere, vielfältige Beispiele schlagen 100.000 verrauschte.` },
+  train: { title: '3 · LoRA-Training', lang: 'python', code: `# train_lora.py  –  QLoRA-Fine-Tuning für Blue AI
+import sys, torch
+from datasets import load_dataset
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from peft import LoraConfig
+from trl import SFTTrainer, SFTConfig
+
+VARIANTS = {
+    "1.0":     dict(base="meta-llama/Llama-3.1-8B-Instruct",   r=16, epochs=3, lr=2e-4),
+    "1.1-pro": dict(base="mistralai/Mistral-Nemo-Instruct-2407", r=32, epochs=3, lr=1e-4),
+}
+v = VARIANTS[sys.argv[1] if len(sys.argv) > 1 else "1.0"]
+
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                         bnb_4bit_compute_dtype=torch.bfloat16)
+tok = AutoTokenizer.from_pretrained(v["base"])
+tok.pad_token = tok.pad_token or tok.eos_token
+model = AutoModelForCausalLM.from_pretrained(v["base"], quantization_config=bnb, device_map="auto")
+
+ds = load_dataset("json", data_files="data/train.jsonl", split="train")
+lora = LoraConfig(r=v["r"], lora_alpha=v["r"] * 2, lora_dropout=0.05, task_type="CAUSAL_LM",
+                  target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"])
+cfg = SFTConfig(output_dir=f"out/blue-{sys.argv[1] if len(sys.argv)>1 else '1.0'}",
+                num_train_epochs=v["epochs"], learning_rate=v["lr"],
+                per_device_train_batch_size=2, gradient_accumulation_steps=8,
+                bf16=True, logging_steps=10, save_strategy="epoch", max_seq_length=2048)
+
+SFTTrainer(model=model, args=cfg, train_dataset=ds, peft_config=lora, processing_class=tok).train()
+model.save_pretrained(cfg.output_dir + "/adapter")` },
+  export: { title: '4 · Export & Ollama', lang: 'bash', code: `# Adapter in das Basismodell mischen, nach GGUF konvertieren, in Ollama registrieren
+python - <<'PY'
+from peft import AutoPeftModelForCausalLM
+m = AutoPeftModelForCausalLM.from_pretrained("out/blue-1.0/adapter").merge_and_unload()
+m.save_pretrained("out/blue-1.0/merged")
+PY
+git clone https://github.com/ggerganov/llama.cpp && pip install -r llama.cpp/requirements.txt
+python llama.cpp/convert_hf_to_gguf.py out/blue-1.0/merged --outfile blue-ai-1.0.gguf --outtype q8_0
+
+# Modelfile.blue10
+cat > Modelfile.blue10 <<'EOF'
+FROM ./blue-ai-1.0.gguf
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER num_ctx 4096
+SYSTEM """Du bist Blue AI 1.0, ein schneller, präziser Assistent."""
+EOF
+ollama create blue-ai:1.0 -f Modelfile.blue10
+ollama run blue-ai:1.0 "Hallo!"
+
+# Für 1.1 Pro dasselbe mit "1.1-pro", num_ctx 8192 und Tag blue-ai:1.1-pro` },
+  proxy: { title: '5 · Node-Proxy', lang: 'javascript', code: `// server.js – optional: liefert index.html aus und leitet /api/* an Ollama weiter.
+// Nutzen, wenn die Seite auf Vercel/HTTPS liegt und Ollama nicht direkt erreichbar ist.
+// Start: node server.js   (Node >= 18)
+import http from 'node:http';
+import { readFile } from 'node:fs/promises';
+
+const OLLAMA = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+http.createServer(async (req, res) => {
+  if (req.url.startsWith('/api/')) {
+    const body = ['POST','PUT'].includes(req.method) ? await new Promise(r => { let d=''; req.on('data', c => d += c); req.on('end', () => r(d)); }) : undefined;
+    const up = await fetch(OLLAMA + req.url, { method: req.method, headers: { 'Content-Type': 'application/json' }, body });
+    res.writeHead(up.status, { 'Content-Type': up.headers.get('content-type') || 'application/json' });
+    for await (const chunk of up.body) res.write(chunk);
+    return res.end();
+  }
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(await readFile(new URL('./index.html', import.meta.url)));
+}).listen(3000, () => console.log('Blue AI auf http://localhost:3000'));
+// In den Einstellungen dann als Endpoint "http://localhost:3000" eintragen.` }
+};
+
+/* ---------- Rendering ---------- */
+function render() {
+  if (!S.user) return renderAuth();
+  const u = S.user, mdl = MODELS[S.data.model];
+  $('#app').innerHTML = `
+  <aside id="side" class="glass fixed md:static inset-y-0 left-0 z-40 w-72 max-w-[85vw] flex flex-col p-3 gap-2 transition-transform ${S.sidebar ? '' : '-translate-x-full md:translate-x-0'}">
+    <div class="flex items-center gap-2 px-2 py-2">
+      <div class="w-9 h-9 rounded-xl btn grid place-items-center"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
+      <span class="font-bold text-lg">Blue AI</span>
     </div>
-  </div>
-
-  <!-- SIDEBAR (Clean & Dynamic) -->
-  <aside id="sidebar" class="w-64 bg-slate-950/80 backdrop-blur-xl border-r border-blue-900/30 flex flex-col justify-between hidden md:flex shrink-0 transition-all z-20">
-    <div class="p-3 space-y-3">
-      <!-- NEW CHAT BUTTON -->
-      <button onclick="resetWorkspace()" class="w-full btn-blue-gradient text-white rounded-xl p-3 flex items-center justify-between font-medium shadow-lg cursor-pointer">
-        <span class="flex items-center gap-2 text-sm">
-          <i data-lucide="plus" class="w-4 h-4"></i> Neuer Chat
-        </span>
-        <i data-lucide="square-pen" class="w-4 h-4 opacity-70"></i>
-      </button>
-
-      <!-- ACTIVE SESSION ITEM -->
-      <div class="pt-2">
-        <div class="text-[10px] font-semibold text-blue-400/80 px-2 uppercase tracking-wider mb-2">Aktuelle Sitzung</div>
-        <div class="w-full text-left px-3 py-2 rounded-lg text-xs bg-blue-900/30 border border-blue-500/20 text-slate-200 truncate flex items-center gap-2">
-          <i data-lucide="message-square" class="w-3.5 h-3.5 text-blue-400 shrink-0"></i>
-          <span id="sidebar-session-title">Neues Gespräch</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- USER / AUTH FOOTER -->
-    <div class="p-3 border-t border-blue-900/30 bg-slate-950/40">
-      <div id="user-profile-btn" onclick="openAuthModal()" class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-blue-900/20 cursor-pointer transition">
-        <div id="user-avatar" class="w-9 h-9 rounded-xl btn-blue-gradient flex items-center justify-center font-bold text-xs shadow">
-          <i data-lucide="user" class="w-4 h-4"></i>
-        </div>
-        <div class="flex-1 truncate">
-          <div id="user-name-display" class="text-xs font-semibold text-slate-200">Gastzugang</div>
-          <div id="user-status-display" class="text-[10px] text-blue-400">Klick zum Anmelden</div>
-        </div>
-        <i data-lucide="log-in" class="w-4 h-4 text-slate-400"></i>
-      </div>
-    </div>
+    <button id="new" class="btn rounded-xl py-2.5 flex items-center justify-center gap-2 font-semibold"><i data-lucide="plus" class="w-4 h-4"></i>Neuer Chat</button>
+    <nav class="flex gap-1 text-sm">
+      <button data-view="chat" class="ghost flex-1 rounded-lg py-2 ${S.view==='chat'?'bg-white/10':''}">Chat</button>
+      <button data-view="train" class="ghost flex-1 rounded-lg py-2 ${S.view==='train'?'bg-white/10':''}">Training</button>
+    </nav>
+    <div class="text-xs text-[color:var(--mute)] px-2 pt-2">Verlauf</div>
+    <div id="hist" class="flex-1 overflow-y-auto space-y-1"></div>
+    <button id="acc" class="ghost rounded-xl p-2 flex items-center gap-3 text-left border border-[color:var(--line)]">
+      <div class="w-9 h-9 rounded-full btn grid place-items-center font-bold">${esc(u.name[0].toUpperCase())}</div>
+      <div class="min-w-0"><div class="truncate text-sm font-semibold">${esc(u.name)}</div><div class="truncate text-xs text-[color:var(--mute)]">${esc(u.email)}</div></div>
+    </button>
   </aside>
-
-  <!-- MAIN VIEWPORT -->
-  <div class="flex-1 flex flex-col h-full relative">
-
-    <!-- TOPBAR / MODEL SELECTOR -->
-    <header class="h-14 border-b border-blue-900/30 bg-slate-950/40 backdrop-blur-md px-4 flex items-center justify-between z-10">
-      <div class="flex items-center gap-3">
-        <button onclick="toggleSidebar()" class="md:hidden p-2 text-slate-300 hover:text-white">
-          <i data-lucide="menu" class="w-5 h-5"></i>
-        </button>
-
-        <!-- HIGH-PERFORMANCE MODEL SELECTOR -->
-        <div class="relative">
-          <select id="model-select" onchange="updateModelDescription()" class="appearance-none bg-blue-950/70 border border-blue-500/40 text-blue-200 text-xs font-semibold py-1.5 pl-3 pr-8 rounded-lg focus:outline-none focus:border-blue-400 cursor-pointer backdrop-blur-md">
-            <option value="blue-1.1">🚀 Blue AI 1.1 Pro (Multimodal & Advanced Intelligence)</option>
-            <option value="blue-1.0">⚡ Blue AI 1.0 (High-Speed Code & Logic)</option>
-          </select>
-          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-blue-400 absolute right-2.5 top-2.5 pointer-events-none"></i>
+  <div id="scrim" class="fixed inset-0 bg-black/50 z-30 ${S.sidebar?'':'hidden'} md:hidden"></div>
+  <main class="flex-1 min-w-0 flex flex-col">
+    <header class="flex items-center gap-2 p-3 border-b border-[color:var(--line)]">
+      <button id="menu" class="md:hidden ghost p-2 rounded-lg" aria-label="Menü"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      <div class="relative">
+        <button id="modelBtn" class="ghost glass rounded-xl px-3 py-2 flex items-center gap-2 text-sm font-semibold">${esc(mdl.name)}<i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+        <div id="modelMenu" class="hidden absolute top-full mt-2 left-0 glass glow rounded-xl p-1 w-72 z-30">
+          ${Object.entries(MODELS).map(([k, m]) => `<button data-model="${k}" class="ghost w-full text-left rounded-lg p-3 ${k===S.data.model?'bg-white/10':''}"><div class="font-semibold text-sm">${m.name}</div><div class="text-xs text-[color:var(--mute)]">${m.desc} · <span class="mono">${esc(S.data.settings.tags[k])}</span></div></button>`).join('')}
         </div>
       </div>
-
-      <div class="flex items-center gap-2">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono bg-blue-500/10 border border-blue-400/30 text-blue-300">
-          <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-          <span id="engine-status">Engine Ready</span>
-        </span>
-      </div>
+      <div class="flex-1"></div>
+      <button id="cfg" class="ghost p-2 rounded-lg" aria-label="Modell-Einstellungen"><i data-lucide="sliders-horizontal" class="w-5 h-5"></i></button>
     </header>
+    <section id="body" class="flex-1 overflow-y-auto"></section>
+    <footer id="foot" class="p-3"></footer>
+  </main>`;
+  renderHistory(); renderBody(); bindShell(); icons();
+}
 
-    <!-- CHAT MESSAGES DISPLAY -->
-    <main id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-3xl mx-auto w-full">
-      
-      <!-- HERO LANDING CARD -->
-      <div id="welcome-card" class="glass-card rounded-2xl p-6 md:p-8 text-center my-8 shadow-2xl relative overflow-hidden">
-        <div class="w-14 h-14 btn-blue-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
-          <i data-lucide="sparkles" class="w-7 h-7 text-white"></i>
-        </div>
-        <h2 class="text-2xl font-bold tracking-tight mb-2 text-white">Wobei kann ich dir heute helfen?</h2>
-        <p class="text-xs md:text-sm text-slate-300 max-w-md mx-auto mb-6">
-          Systeme für Code-Generierung, E-Commerce-Analysen und Automatisierung über <strong>Blue AI 1.1 Pro</strong>.
-        </p>
+function renderHistory() {
+  $('#hist').innerHTML = S.data.chats.length ? S.data.chats.map(c => `
+    <div class="group flex items-center rounded-lg ${c.id===S.data.active&&S.view==='chat'?'bg-white/10':''} ghost">
+      <button data-chat="${c.id}" class="flex-1 min-w-0 text-left text-sm px-3 py-2 truncate">${esc(c.title)}</button>
+      <button data-del="${c.id}" class="p-2 opacity-60 hover:opacity-100" aria-label="Chat löschen"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+    </div>`).join('') : '<div class="text-xs text-[color:var(--mute)] px-2">Noch keine Chats. Stelle unten deine erste Frage.</div>';
+  icons();
+}
 
-        <!-- PRESET PROMPTS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
-          <button onclick="sendPreset('Erstelle ein hochmodernes HTML/Tailwind CSS Interface für ein Autohaus')" class="p-3.5 bg-slate-900/80 hover:bg-blue-950/60 border border-blue-800/40 rounded-xl transition group cursor-pointer">
-            <div class="flex items-center gap-2 text-blue-400 text-xs font-semibold mb-1">
-              <i data-lucide="code-2" class="w-4 h-4"></i> High-End Code Gen
-            </div>
-            <div class="text-xs text-slate-300">Generiere komplexe Single-Page Web-Apps...</div>
-          </button>
+function renderBody() {
+  const b = $('#body'), f = $('#foot');
+  if (S.view === 'train') { f.innerHTML = ''; return renderTrain(b); }
+  f.innerHTML = `<div class="max-w-3xl mx-auto glass glow rounded-2xl p-2 flex items-end gap-2">
+    <textarea id="inp" rows="1" placeholder="Nachricht an ${esc(MODELS[S.data.model].name)}" class="!border-0 !bg-transparent resize-none max-h-48"></textarea>
+    <button id="sendBtn" class="btn rounded-xl p-2.5" aria-label="Senden"></button></div>
+    <p class="text-center text-xs text-[color:var(--mute)] mt-2">Läuft lokal über ${esc(S.data.settings.endpoint)}. Prüfe wichtige Antworten selbst.</p>`;
+  b.innerHTML = '<div id="msgs" class="max-w-3xl mx-auto p-4 md:p-6 space-y-6"></div>';
+  const inp = $('#inp');
+  inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); go(); } });
+  $('#sendBtn').onclick = () => S.busy ? S.ctrl?.abort() : go();
+  function go() { const v = inp.value; inp.value = ''; inp.style.height = 'auto'; send(v); updateSend(); }
+  renderMessages(); updateSend();
+}
+function updateSend() { const b = $('#sendBtn'); if (b) { b.innerHTML = `<i data-lucide="${S.busy ? 'square' : 'arrow-up'}" class="w-5 h-5"></i>`; b.setAttribute('aria-label', S.busy ? 'Stopp' : 'Senden'); icons(); } }
 
-          <button onclick="sendPreset('Analysiere Werbebudget & Margen für eine E-Commerce Dropshipping Brand')" class="p-3.5 bg-slate-900/80 hover:bg-blue-950/60 border border-blue-800/40 rounded-xl transition group cursor-pointer">
-            <div class="flex items-center gap-2 text-cyan-400 text-xs font-semibold mb-1">
-              <i data-lucide="calculator" class="w-4 h-4"></i> Business & Finance Logic
-            </div>
-            <div class="text-xs text-slate-300">Kalkuliere AdSpend, Steuern und Deckungsbeitrag...</div>
-          </button>
-        </div>
+function md(t) {
+  const html = DOMPurify.sanitize(marked.parse(t, { breaks: true, gfm: true }));
+  const d = document.createElement('div'); d.innerHTML = html;
+  d.querySelectorAll('pre').forEach(p => { const b = document.createElement('button'); b.className = 'copy'; b.textContent = 'Kopieren'; b.dataset.copy = '1'; p.appendChild(b); });
+  return d.innerHTML;
+}
+function renderMessages(keepScroll) {
+  const box = $('#msgs'); if (!box) return; const c = chat(), body = $('#body');
+  const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 120;
+  if (!c || !c.messages.length) {
+    box.innerHTML = `<div class="text-center pt-[14vh]"><div class="w-16 h-16 mx-auto rounded-2xl btn grid place-items-center glow"><i data-lucide="sparkles" class="w-8 h-8"></i></div>
+      <h1 class="text-2xl md:text-3xl font-bold mt-6">Hallo ${esc(S.user.name.split(' ')[0])}, was möchtest du wissen?</h1>
+      <p class="text-[color:var(--mute)] mt-2">Deine Anfragen gehen ausschließlich an dein lokales Modell.</p></div>`; icons(); return;
+  }
+  box.innerHTML = c.messages.map(m => m.role === 'user'
+    ? `<div class="flex justify-end"><div class="glass rounded-2xl rounded-br-md px-4 py-3 max-w-[85%] whitespace-pre-wrap">${esc(m.content)}</div></div>`
+    : `<div class="flex gap-3"><div class="w-8 h-8 shrink-0 rounded-lg btn grid place-items-center"><i data-lucide="sparkles" class="w-4 h-4"></i></div>
+       <div class="md min-w-0 flex-1 ${m.error ? 'text-red-300' : ''}">${m.content ? md(m.content) : '<span class="dot">●</span><span class="dot">●</span><span class="dot">●</span>'}</div></div>`).join('');
+  icons(); if (atBottom || !keepScroll) body.scrollTop = body.scrollHeight;
+}
+
+function renderTrain(b) {
+  const keys = Object.keys(TRAIN); S.tab = S.tab || keys[0];
+  b.innerHTML = `<div class="max-w-4xl mx-auto p-4 md:p-6">
+    <h1 class="text-2xl font-bold">Blue AI selbst trainieren</h1>
+    <p class="text-[color:var(--mute)] mt-2 max-w-prose leading-relaxed">Blue AI 1.0 und 1.1 Pro sind lokale Ollama-Modelle. Mit diesen Schritten erzeugst du eigene Varianten per QLoRA-Fine-Tuning auf Basis offener Modelle und bindest sie unter den Tags <span class="mono">${esc(S.data.settings.tags['blue-1.0'])}</span> und <span class="mono">${esc(S.data.settings.tags['blue-1.1pro'])}</span> ein.</p>
+    <div class="flex gap-1 overflow-x-auto mt-6 pb-1">${keys.map(k => `<button data-tab="${k}" class="ghost whitespace-nowrap rounded-lg px-3 py-2 text-sm ${k===S.tab?'bg-white/10 font-semibold':''}">${TRAIN[k].title}</button>`).join('')}</div>
+    <div class="md"><pre><code class="language-${TRAIN[S.tab].lang}">${esc(TRAIN[S.tab].code)}</code><button class="copy" data-copy="1">Kopieren</button></pre></div>
+    <div class="glass rounded-xl p-4 mt-4 text-sm leading-relaxed text-[color:var(--mute)]">Hardware-Richtwert: 8B-Modelle brauchen für QLoRA etwa 12–16 GB VRAM, 12B-Modelle eher 24 GB. Prüfe vor dem Training die Lizenz des Basismodells.</div></div>`;
+  b.querySelectorAll('[data-tab]').forEach(x => x.onclick = () => { S.tab = x.dataset.tab; renderTrain(b); icons(); });
+}
+
+/* ---------- Bindings ---------- */
+function bindShell() {
+  $('#new').onclick = () => { S.sidebar = false; newChat(); };
+  $('#menu').onclick = () => { S.sidebar = true; render(); };
+  $('#scrim').onclick = () => { S.sidebar = false; render(); };
+  document.querySelectorAll('[data-view]').forEach(x => x.onclick = () => { S.view = x.dataset.view; S.sidebar = false; render(); });
+  $('#modelBtn').onclick = e => { e.stopPropagation(); $('#modelMenu').classList.toggle('hidden'); };
+  document.querySelectorAll('[data-model]').forEach(x => x.onclick = () => { S.data.model = x.dataset.model; save(); render(); });
+  $('#cfg').onclick = openSettings; $('#acc').onclick = openAccount;
+  $('#hist').onclick = e => {
+    const o = e.target.closest('[data-chat]'), d = e.target.closest('[data-del]');
+    if (o) { S.data.active = o.dataset.chat; S.view = 'chat'; S.sidebar = false; save(); render(); }
+    if (d) { S.data.chats = S.data.chats.filter(c => c.id !== d.dataset.del); if (S.data.active === d.dataset.del) S.data.active = S.data.chats[0]?.id || null; save(); render(); }
+  };
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#modelBtn')) $('#modelMenu')?.classList.add('hidden');
+  const c = e.target.closest('[data-copy]');
+  if (c) { const t = c.parentElement.querySelector('code').innerText; navigator.clipboard.writeText(t).then(() => { c.textContent = 'Kopiert'; setTimeout(() => c.textContent = 'Kopieren', 1400); }).catch(() => toast('Kopieren nicht möglich.')); }
+});
+
+/* ---------- Modale ---------- */
+function modal(html, wide) {
+  $('#modal-root').innerHTML = `<div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center p-4" id="mbg"><div class="glass glow rounded-2xl p-6 w-full ${wide ? 'max-w-xl' : 'max-w-md'} max-h-[92vh] overflow-y-auto" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#mbg').onclick = e => { if (e.target.id === 'mbg' && S.user) closeModal(); };
+  icons();
+}
+const closeModal = () => $('#modal-root').innerHTML = '';
+
+function renderAuth() {
+  $('#app').innerHTML = ''; let mode = 'login';
+  const draw = () => {
+    modal(`<div class="text-center mb-5"><div class="w-14 h-14 mx-auto rounded-2xl btn grid place-items-center"><i data-lucide="sparkles" class="w-7 h-7"></i></div>
+      <h2 class="text-xl font-bold mt-4">${mode === 'login' ? 'Bei Blue AI anmelden' : 'Blue AI-Konto erstellen'}</h2></div>
+      <div class="space-y-3">
+        ${mode === 'register' ? '<input id="a-name" placeholder="Name" autocomplete="name">' : ''}
+        <input id="a-mail" type="email" placeholder="E-Mail" autocomplete="email">
+        <input id="a-pw" type="password" placeholder="Passwort" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}">
+        <div id="a-err" class="text-sm text-red-300 min-h-[1.25rem]" role="alert"></div>
+        <button id="a-go" class="btn w-full rounded-xl py-3 font-semibold">${mode === 'login' ? 'Anmelden' : 'Konto erstellen'}</button>
+        <button id="a-sw" class="w-full text-sm text-[color:var(--mute)] hover:text-white">${mode === 'login' ? 'Noch kein Konto? Registrieren' : 'Schon registriert? Anmelden'}</button>
       </div>
+      <p class="text-xs text-[color:var(--mute)] mt-4 leading-relaxed">Konten und Chats liegen nur in diesem Browser (Passwort mit PBKDF2 gehasht). Das ist ein lokaler Zugang und ersetzt kein Server-Login für mehrere Geräte.</p>`);
+    $('#a-sw').onclick = () => { mode = mode === 'login' ? 'register' : 'login'; draw(); };
+    const go = async () => {
+      const btn = $('#a-go'); btn.disabled = true;
+      try {
+        if (mode === 'register') await Auth.register($('#a-name').value, $('#a-mail').value, $('#a-pw').value);
+        else await Auth.login($('#a-mail').value, $('#a-pw').value);
+        boot();
+      } catch (e) { $('#a-err').textContent = e.message; btn.disabled = false; }
+    };
+    $('#a-go').onclick = go; $('#a-pw').onkeydown = e => e.key === 'Enter' && go();
+  };
+  draw();
+}
 
-    </main>
-
-    <!-- INPUT BAR AREA -->
-    <footer class="p-4 bg-slate-950/60 backdrop-blur-md">
-      <div class="max-w-3xl mx-auto">
-        <form id="chat-form" class="relative flex items-center bg-slate-900/90 border border-blue-800/50 rounded-2xl p-2 shadow-2xl focus-within:border-blue-500 transition">
-          <textarea 
-            id="user-input" 
-            rows="1" 
-            placeholder="Nachricht an Blue AI senden..." 
-            class="w-full bg-transparent px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus:outline-none resize-none"
-          ></textarea>
-          
-          <button 
-            type="submit" 
-            class="btn-blue-gradient p-2.5 text-white rounded-xl transition-all shadow-md flex items-center justify-center cursor-pointer shrink-0 ml-2"
-          >
-            <i data-lucide="arrow-up" class="w-4 h-4 stroke-[3]"></i>
-          </button>
-        </form>
-
-        <div class="flex items-center justify-between text-[11px] text-slate-400 mt-2 px-2">
-          <span id="active-model-indicator" class="font-mono text-blue-400">Modell: Blue AI 1.1 Pro</span>
-          <span>Apex OS Engine • Standalone</span>
-        </div>
+function openSettings() {
+  const st = S.data.settings;
+  modal(`<div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold">Modell-Einstellungen</h2><button id="x" class="ghost p-2 rounded-lg" aria-label="Schließen"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+    <div class="space-y-4 text-sm">
+      <label class="block">Ollama-Endpoint<input id="s-ep" value="${esc(st.endpoint)}" class="mt-1 mono"></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block">Tag Blue AI 1.0<input id="s-t1" value="${esc(st.tags['blue-1.0'])}" class="mt-1 mono"></label>
+        <label class="block">Tag Blue AI 1.1 Pro<input id="s-t2" value="${esc(st.tags['blue-1.1pro'])}" class="mt-1 mono"></label>
       </div>
-    </footer>
+      <label class="block">Temperatur: <b id="v-t">${st.temperature}</b><input id="s-temp" type="range" min="0" max="2" step="0.05" value="${st.temperature}" class="!p-0 mt-1"></label>
+      <label class="block">Top-P: <b id="v-p">${st.top_p}</b><input id="s-top" type="range" min="0" max="1" step="0.05" value="${st.top_p}" class="!p-0 mt-1"></label>
+      <label class="block">Kontextlänge (Tokens)<select id="s-ctx" class="mt-1">${[2048, 4096, 8192, 16384].map(n => `<option ${n === +st.num_ctx ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label class="block">System-Prompt<textarea id="s-sys" rows="4" class="mt-1">${esc(st.system)}</textarea></label>
+      <div class="flex gap-2"><button id="s-reset" class="ghost rounded-xl px-4 py-2.5 border border-[color:var(--line)]">Zurücksetzen</button><button id="s-save" class="btn flex-1 rounded-xl py-2.5 font-semibold">Speichern</button></div>
+    </div>`, true);
+  $('#x').onclick = closeModal;
+  $('#s-temp').oninput = e => $('#v-t').textContent = e.target.value;
+  $('#s-top').oninput = e => $('#v-p').textContent = e.target.value;
+  $('#s-reset').onclick = () => { S.data.settings = structuredClone(DEFAULTS); save(); closeModal(); render(); toast('Standardwerte wiederhergestellt.'); };
+  $('#s-save').onclick = () => {
+    S.data.settings = { endpoint: $('#s-ep').value.trim() || DEFAULTS.endpoint, temperature: +$('#s-temp').value, top_p: +$('#s-top').value, num_ctx: +$('#s-ctx').value,
+      system: $('#s-sys').value, tags: { 'blue-1.0': $('#s-t1').value.trim() || DEFAULTS.tags['blue-1.0'], 'blue-1.1pro': $('#s-t2').value.trim() || DEFAULTS.tags['blue-1.1pro'] } };
+    save(); closeModal(); render(); toast('Einstellungen gespeichert.');
+  };
+}
 
-  </div>
+function openAccount() {
+  const u = S.user;
+  modal(`<div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold">Konto</h2><button id="x" class="ghost p-2 rounded-lg" aria-label="Schließen"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+    <div class="space-y-3 text-sm">
+      <label class="block">Name<input id="ac-name" value="${esc(u.name)}" class="mt-1"></label>
+      <div class="text-[color:var(--mute)]">${esc(u.email)} · seit ${new Date(u.created).toLocaleDateString('de-DE')}</div>
+      <button id="ac-save" class="btn w-full rounded-xl py-2.5 font-semibold">Name speichern</button>
+      <button id="ac-exp" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Chats exportieren (JSON)</button>
+      <button id="ac-out" class="ghost w-full rounded-xl py-2.5 border border-[color:var(--line)]">Abmelden</button>
+      <button id="ac-del" class="w-full rounded-xl py-2.5 border border-red-400/40 text-red-300 hover:bg-red-500/10">Konto und alle Chats löschen</button>
+    </div>`);
+  $('#x').onclick = closeModal;
+  $('#ac-save').onclick = () => { const n = $('#ac-name').value.trim(); if (!n) return toast('Name darf nicht leer sein.'); Auth.update({ name: n }); S.user = Auth.current(); closeModal(); render(); toast('Name gespeichert.'); };
+  $('#ac-exp').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S.data.chats, null, 2)], { type: 'application/json' })); a.download = 'blue-ai-chats.json'; a.click(); URL.revokeObjectURL(a.href); };
+  $('#ac-out').onclick = () => { Auth.logout(); location.reload(); };
+  $('#ac-del').onclick = () => { if (confirm('Konto und alle Chats unwiderruflich löschen?')) { Auth.remove(); location.reload(); } };
+}
 
-  <script>
-    lucide.createIcons();
-
-    const chatContainer = document.getElementById('chat-container');
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
-    const modelSelect = document.getElementById('model-select');
-    const activeModelIndicator = document.getElementById('active-model-indicator');
-    const welcomeCard = document.getElementById('welcome-card');
-    const sidebarSessionTitle = document.getElementById('sidebar-session-title');
-
-    let isFirstMessage = true;
-    let currentUser = null;
-
-    // AUTO RESIZE TEXTAREA
-    userInput.addEventListener('input', () => {
-      userInput.style.height = 'auto';
-      userInput.style.height = Math.min(userInput.scrollHeight, 160) + 'px';
-    });
-
-    userInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        chatForm.dispatchEvent(new Event('submit'));
-      }
-    });
-
-    function updateModelDescription() {
-      const selected = modelSelect.value;
-      activeModelIndicator.innerText = selected === 'blue-1.1' ? 'Modell: Blue AI 1.1 Pro' : 'Modell: Blue AI 1.0';
-    }
-
-    function sendPreset(text) {
-      userInput.value = text;
-      chatForm.dispatchEvent(new Event('submit'));
-    }
-
-    // MAIN AI RESPONSE GENERATOR (High-Intelligence Simulation Engine)
-    chatForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const message = userInput.value.trim();
-      if (!message) return;
-
-      if (isFirstMessage) {
-        if (welcomeCard) welcomeCard.remove();
-        sidebarSessionTitle.innerText = message.length > 20 ? message.substring(0, 20) + '...' : message;
-        isFirstMessage = false;
-      }
-
-      const selectedModel = modelSelect.value;
-      appendMessage('user', message);
-      userInput.value = '';
-      userInput.style.height = 'auto';
-      scrollToBottom();
-
-      const loadingId = appendLoading();
-      scrollToBottom();
-
-      // ADVANCED AI ENGINE PROCESSOR
-      setTimeout(() => {
-        removeLoading(loadingId);
-        const aiResponse = generateAdvancedResponse(message, selectedModel);
-        appendMessage('assistant', aiResponse, selectedModel);
-        scrollToBottom();
-      }, 1100);
-    });
-
-    function generateAdvancedResponse(query, model) {
-      const q = query.toLowerCase();
-
-      // CODE ENGINE RESPONSE
-      if (q.includes('code') || q.includes('html') || q.includes('interface') || q.includes('autohaus') || q.includes('website')) {
-        return `### 🚀 Blue AI Code Engine Result\n\nHier ist ein optimiertes Code-Gerüst basierend auf deiner Anfrage:\n\n\`\`\`html\n<div class="bg-slate-900 border border-blue-500/30 rounded-2xl p-6 shadow-xl">\n  <h3 class="text-xl font-bold text-white mb-2">Apex Custom Vehicles</h3>\n  <p class="text-sm text-slate-300 mb-4">Konfiguriere deinen Gebrauchtwagen mit Neuwagen-Feeling.</p>\n  <button class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-xl transition">\n    Konfigurator Starten →\n  </button>\n</div>\n\`\`\`\n\n- **Modell:** ${model === 'blue-1.1' ? 'Blue AI 1.1 Pro' : 'Blue AI 1.0'}\n- **Optimierung:** Responsive Flexbox/Grid + Glassmorphism.`;
-      }
-
-      // BUSINESS / ADSPEND RESPONSE
-      if (q.includes('adspend') || q.includes('dropshipping') || q.includes('business') || q.includes('marge') || q.includes('steuer')) {
-        return `### 📊 Blue AI Financial & Analytics Engine\n\n**Analyse für E-Commerce Skalierung:**\n\n1. **Empfohlenes AdSpend Test-Budget:** 15 € – 25 € pro Ad-Set / Tag.\n2. **Break-Even ROAS Berechnungs-Formel:**\n   $$\\text{Break-Even ROAS} = \\frac{\\text{Verkaufspreis}}{\\text{Verkaufspreis} - \\text{EK-Preis} - \\text{Versand}}$$\n3. **Steuerhinweis (DE):** Bei Zielumsätzen über 25.000 €/Jahr greift die Regelbesteuerung (19 % USt.). Sauberes Buchhaltungssystem ab Tag 1 erforderlich.`;
-      }
-
-      // GENERAL INTELLECTUAL RESPONSE
-      if (model === 'blue-1.1') {
-        return `[Blue AI 1.1 Pro Engine]\n\nIch habe deine Anfrage ("${query}") analysiert und verarbeitet.\n\nDas System arbeitet mit erweiterter Kontext-Erkennung. Alle Parameter sind optimal ausgerichtet, um deine Anforderung im Apex-Ökosystem direkt umzusetzen. Wie wollen wir im nächsten Schritt fortfahren?`;
-      } else {
-        return `[Blue AI 1.0 High-Speed Engine]\n\nPräzise Antwort auf deine Eingabe: "${query}".\n\nDas 1.0 Modell ist auf maximale Geschwindigkeit und strukturierte Ausführung ausgelegt.`;
-      }
-    }
-
-    function appendMessage(role, text, model = '') {
-      const isUser = role === 'user';
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`;
-
-      const avatar = isUser ? 
-        `<div class="w-8 h-8 rounded-xl btn-blue-gradient flex items-center justify-center text-xs font-bold shrink-0 shadow">` + (currentUser ? currentUser.substring(0, 2).toUpperCase() : 'DU') + `</div>` :
-        `<div class="w-8 h-8 rounded-xl bg-blue-950 border border-blue-500/40 text-blue-400 flex items-center justify-center shrink-0 shadow"><i data-lucide="sparkles" class="w-4 h-4"></i></div>`;
-
-      // Formatiere Markdown-Syntax grob
-      let formattedText = escapeHtml(text)
-        .replace(/```html([\s\S]*?)```/g, '<pre class="bg-slate-950 border border-blue-900/50 p-3 rounded-xl my-2 text-xs overflow-x-auto text-blue-300"><code>$1</code></pre>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-        .replace(/### (.*?)\n/g, '<h4 class="text-base font-bold text-blue-300 mt-2 mb-1">$1</h4>');
-
-      msgDiv.innerHTML = `
-        ${!isUser ? avatar : ''}
-        <div class="max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-lg ${
-          isUser 
-            ? 'btn-blue-gradient text-white rounded-br-xs' 
-            : 'glass-card text-slate-200 rounded-bl-xs'
-        }">
-          ${!isUser ? `<div class="text-[10px] font-mono text-blue-400 mb-1 font-semibold flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3"></i> ${model === 'blue-1.1' ? 'Blue AI 1.1 Pro' : 'Blue AI 1.0'}</div>` : ''}
-          <div class="leading-relaxed text-xs md:text-sm space-y-1">${formattedText}</div>
-        </div>
-        ${isUser ? avatar : ''}
-      `;
-
-      chatContainer.appendChild(msgDiv);
-      lucide.createIcons();
-    }
-
-    function appendLoading() {
-      const id = 'loading-' + Date.now();
-      const loadDiv = document.createElement('div');
-      loadDiv.id = id;
-      loadDiv.className = 'flex gap-3 justify-start';
-      loadDiv.innerHTML = `
-        <div class="w-8 h-8 rounded-xl bg-blue-950 border border-blue-500/40 text-blue-400 flex items-center justify-center shrink-0">
-          <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
-        </div>
-        <div class="glass-card rounded-2xl rounded-bl-xs px-4 py-3 text-xs text-blue-300 flex items-center gap-2">
-          <span>Blue AI verarbeitet Eingabe...</span>
-        </div>
-      `;
-      chatContainer.appendChild(loadDiv);
-      lucide.createIcons();
-      return id;
-    }
-
-    function removeLoading(id) {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    }
-
-    function scrollToBottom() {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function resetWorkspace() {
-      location.reload();
-    }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('hidden');
-    }
-
-    function escapeHtml(text) {
-      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    }
-
-    // AUTH MODAL LOGIC
-    function openAuthModal() {
-      document.getElementById('auth-modal').classList.remove('hidden');
-    }
-    function closeAuthModal() {
-      document.getElementById('auth-modal').classList.add('hidden');
-    }
-    function switchAuthTab(tab) {
-      const loginForm = document.getElementById('login-form');
-      const regForm = document.getElementById('register-form');
-      const loginBtn = document.getElementById('tab-login-btn');
-      const regBtn = document.getElementById('tab-register-btn');
-
-      if (tab === 'login') {
-        loginForm.classList.remove('hidden');
-        regForm.classList.add('hidden');
-        loginBtn.className = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-blue-500 text-blue-400 transition";
-        regBtn.className = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-      } else {
-        loginForm.classList.add('hidden');
-        regForm.classList.remove('hidden');
-        regBtn.className = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-blue-500 text-blue-400 transition";
-        loginBtn.className = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-      }
-    }
-
-    function handleAuth(e, type) {
-      e.preventDefault();
-      const nameInput = type === 'register' ? document.getElementById('reg-name').value : 'Benutzer';
-      currentUser = nameInput;
-
-      document.getElementById('user-name-display').innerText = nameInput;
-      document.getElementById('user-status-display').innerText = 'Pro Konto Aktiv';
-      document.getElementById('user-avatar').innerText = nameInput.substring(0, 2).toUpperCase();
-
-      closeAuthModal();
-    }
-  </script>
+/* ---------- Start ---------- */
+function boot() {
+  closeModal(); S.user = Auth.current();
+  if (S.user) { loadData(); if (!chat()) S.data.active = S.data.chats[0]?.id || null; render(); } else renderAuth();
+}
+marked.setOptions({ mangle: false, headerIds: false });
+boot();
+</script>
 </body>
 </html>
