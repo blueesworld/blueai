@@ -10,27 +10,36 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#e8f0ff;--mute:#8aa0c8;--line:rgba(120,160,255,.16);--glass:rgba(14,26,58,.62);--accent:#3b82ff;--glow:rgba(59,130,255,.35)}
+:root{--ink:#eaf0ff;--mute:#8d9cc0;--line:rgba(255,255,255,.08);--panel:#0a1430;--accent:#3b7bff}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:radial-gradient(1200px 700px at 15% -10%,#143a8f 0%,transparent 60%),radial-gradient(900px 600px at 100% 110%,#0b2a6b 0%,transparent 55%),#040b1f;background-attachment:fixed;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-.glass{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line)}
-.glow{box-shadow:0 0 0 1px var(--line),0 10px 40px -10px var(--glow)}
-.btn{background:linear-gradient(135deg,#2f6bff,#1d4fd8);box-shadow:0 6px 24px -8px var(--glow);transition:filter .15s}
-.btn:hover{filter:brightness(1.12)}
-.ghost:hover{background:rgba(80,130,255,.12)}
-input,textarea,select{background:rgba(5,14,38,.7);border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:.6rem .8rem;width:100%;font:inherit;font-size:.9rem}
-input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+body{font-family:'Sora',system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,#081437 0%,#050d26 60%,#040a1c 100%);background-attachment:fixed;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);-webkit-font-smoothing:antialiased}
+aside.glass{background:rgba(5,11,30,.75);border:0;border-right:1px solid var(--line);backdrop-filter:blur(12px)}
+.glass{background:rgba(255,255,255,.045);border:1px solid var(--line)}
+.glow{box-shadow:0 12px 40px -16px rgba(0,0,0,.6)}
+.btn{background:var(--accent);color:#fff;transition:background .15s}
+.btn:hover{background:#2f6ae6}
+.btn:disabled{opacity:.6}
+.ghost{transition:background .15s}
+.ghost:hover{background:rgba(255,255,255,.07)}
+input,textarea,select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--ink);border-radius:10px;padding:.65rem .85rem;width:100%;font:inherit;font-size:.92rem;transition:border-color .15s,box-shadow .15s}
+input::placeholder,textarea::placeholder{color:#6f7fa6}
+input:focus,textarea:focus,select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,123,255,.25)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select option{background:#0a1430}
+input[type=range]{padding:0;accent-color:var(--accent)}
 .mono{font-family:'JetBrains Mono',monospace}
-.md p{margin:.5em 0;line-height:1.7}.md ul{list-style:disc;padding-left:1.4em}.md ol{list-style:decimal;padding-left:1.4em}
-.md code:not(pre code){background:rgba(80,130,255,.18);padding:.1em .4em;border-radius:6px;font-size:.85em}
-.md pre{position:relative;background:#030a1c;border:1px solid var(--line);border-radius:12px;padding:1rem;overflow-x:auto;margin:.8em 0;font-size:.82rem}
+.md{font-size:.95rem}
+.md p{margin:.5em 0;line-height:1.75}.md ul{list-style:disc;padding-left:1.4em}.md ol{list-style:decimal;padding-left:1.4em}
+.md code:not(pre code){background:rgba(255,255,255,.09);padding:.1em .4em;border-radius:6px;font-size:.85em}
+.md pre{position:relative;background:#030816;border:1px solid var(--line);border-radius:12px;padding:1rem;overflow-x:auto;margin:.8em 0;font-size:.82rem;line-height:1.6}
 .md pre code{font-family:'JetBrains Mono',monospace}
-.copy{position:absolute;top:.5rem;right:.5rem;font-size:.7rem;padding:.2rem .5rem;border-radius:8px;background:rgba(80,130,255,.2)}
+.copy{position:absolute;top:.5rem;right:.5rem;font-size:.7rem;padding:.25rem .55rem;border-radius:8px;background:rgba(255,255,255,.1)}
+.copy:hover{background:rgba(255,255,255,.18)}
 .dot{animation:p 1.2s infinite}.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes p{0%,80%,100%{opacity:.2}40%{opacity:1}}
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(100,140,255,.25);border-radius:8px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -247,8 +256,8 @@ function render() {
     <header class="flex items-center gap-2 p-3 border-b border-[color:var(--line)]">
       <button id="menu" class="md:hidden ghost p-2 rounded-lg" aria-label="Menü"><i data-lucide="menu" class="w-5 h-5"></i></button>
       <div class="relative">
-        <button id="modelBtn" class="ghost glass rounded-xl px-3 py-2 flex items-center gap-2 text-sm font-semibold">${esc(mdl.name)}<i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-        <div id="modelMenu" class="hidden absolute top-full mt-2 left-0 glass glow rounded-xl p-1 w-72 z-30">
+        <button id="modelBtn" class="ghost rounded-lg px-3 py-2 flex items-center gap-2 text-sm font-semibold">${esc(mdl.name)}<i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+        <div id="modelMenu" class="hidden absolute top-full mt-2 left-0 glow border border-[color:var(--line)] bg-[color:var(--panel)] rounded-xl p-1 w-72 z-30">
           ${Object.entries(MODELS).map(([k, m]) => `<button data-model="${k}" class="ghost w-full text-left rounded-lg p-3 ${k===S.data.model?'bg-white/10':''}"><div class="font-semibold text-sm">${m.name}</div><div class="text-xs text-[color:var(--mute)]">${m.desc} · <span class="mono">${esc(S.data.settings.tags[k])}</span></div></button>`).join('')}
         </div>
       </div>
@@ -273,7 +282,7 @@ function renderHistory() {
 function renderBody() {
   const b = $('#body'), f = $('#foot');
   if (S.view === 'train') { f.innerHTML = ''; return renderTrain(b); }
-  f.innerHTML = `<div class="max-w-3xl mx-auto glass glow rounded-2xl p-2 flex items-end gap-2">
+  f.innerHTML = `<div class="max-w-3xl mx-auto glass rounded-2xl p-2 flex items-end gap-2">
     <textarea id="inp" rows="1" placeholder="Nachricht an ${esc(MODELS[S.data.model].name)}" class="!border-0 !bg-transparent resize-none max-h-48"></textarea>
     <button id="sendBtn" class="btn rounded-xl p-2.5" aria-label="Senden"></button></div>
     <p class="text-center text-xs text-[color:var(--mute)] mt-2">Läuft lokal über ${esc(S.data.settings.endpoint)}. Prüfe wichtige Antworten selbst.</p>`;
@@ -342,7 +351,7 @@ document.addEventListener('click', e => {
 
 /* ---------- Modale ---------- */
 function modal(html, wide) {
-  $('#modal-root').innerHTML = `<div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center p-4" id="mbg"><div class="glass glow rounded-2xl p-6 w-full ${wide ? 'max-w-xl' : 'max-w-md'} max-h-[92vh] overflow-y-auto" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#modal-root').innerHTML = `<div class="fixed inset-0 z-50 bg-black/65 grid place-items-center p-4" id="mbg"><div class="glow rounded-2xl p-6 w-full border border-[color:var(--line)] bg-[color:var(--panel)] ${wide ? 'max-w-xl' : 'max-w-md'} max-h-[92vh] overflow-y-auto" role="dialog" aria-modal="true">${html}</div></div>`;
   $('#mbg').onclick = e => { if (e.target.id === 'mbg' && S.user) closeModal(); };
   icons();
 }
@@ -371,7 +380,7 @@ function renderAuth() {
         boot();
       } catch (e) { $('#a-err').textContent = e.message; btn.disabled = false; }
     };
-    $('#a-go').onclick = go; $('#a-pw').onkeydown = e => e.key === 'Enter' && go();
+    $('#a-go').onclick = go; $('#a-pw').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   };
   draw();
 }
