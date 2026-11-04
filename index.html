@@ -75,6 +75,7 @@ const DEFAULT_SYSTEM = [
   '- Beantworte zuerst die eigentliche Frage, danach Details oder Beispiele.',
   '- Wenn dir Informationen fehlen oder du unsicher bist, sag das offen, statt etwas zu erfinden.',
   '- Bei unklaren Fragen stelle höchstens eine kurze Rückfrage.',
+  '- Erkenne die Absicht hinter einer Frage, auch bei Tippfehlern, Umgangssprache oder sehr kurzen Nachrichten.',
   '- Code kommt in Markdown-Codeblöcken mit Sprachangabe, Rechenwege Schritt für Schritt.'
 ].join('\n');
 const MODEL_EXTRA = {
@@ -88,7 +89,13 @@ function fitHistory(msgs, budget) {
   for (let i = msgs.length - 1; i >= 0; i--) { used += approxTok(msgs[i].content); if (used > budget && out.length) break; out.unshift(msgs[i]); }
   return out;
 }
+const BROWSER_MODELS = {
+  'blue-1.0': 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
+  'blue-1.1pro': 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
+};
+const WEBLLM_URL = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm';
 const DEFAULTS = {
+  backend: 'browser',
   endpoint: 'http://localhost:11434', temperature: 0.7, top_p: 0.9, num_ctx: 4096,
   system: DEFAULT_SYSTEM,
   tags: { 'blue-1.0': MODELS['blue-1.0'].tag, 'blue-1.1pro': MODELS['blue-1.1pro'].tag }
@@ -127,14 +134,48 @@ const Auth = {
 const S = { user: null, data: null, view: 'chat', busy: false, ctrl: null, sidebar: false };
 function loadData() {
   S.data = store.get('blue_data_' + S.user.id, null) || { chats: [], active: null, model: 'blue-1.1pro', settings: structuredClone(DEFAULTS) };
-  if (S.data.settings?.system === OLD_SYSTEM) S.data.settings.system = DEFAULT_SYSTEM;
+  if (S.data.settings && !S.data.settings.customSystem) S.data.settings.system = DEFAULT_SYSTEM;
   S.data.settings = { ...structuredClone(DEFAULTS), ...S.data.settings, tags: { ...DEFAULTS.tags, ...(S.data.settings.tags || {}) } };
 }
 const save = () => store.set('blue_data_' + S.user.id, S.data);
 const chat = () => S.data.chats.find(c => c.id === S.data.active);
 function newChat() { const c = { id: uid(), title: 'Neuer Chat', messages: [], created: Date.now() }; S.data.chats.unshift(c); S.data.active = c.id; S.view = 'chat'; save(); render(); }
 
-/* ---------- Chat gegen lokales Backend (Ollama /api/chat, NDJSON-Stream) ---------- */
+/* ---------- Backend 1: Modell direkt im Browser (WebLLM, WebGPU) ---------- */
+async function getEngine(modelId, onStatus) {
+  if (!navigator.gpu) throw new Error('Dieser Browser unterstützt WebGPU nicht.');
+  if (location.protocol === 'file:') throw new Error('Per Doppelklick (file://) kann der Browser das Modell nicht zwischenspeichern.');
+  if (S.engine && S.engineId === modelId) return S.engine;
+  const cb = p => onStatus(`Lade ${MODELS[S.data.model].name} … ${Math.round((p.progress || 0) * 100)} % (einmalig, danach im Cache)`);
+  if (S.engine) { await S.engine.reload(modelId); S.engineId = modelId; return S.engine; }
+  const webllm = await import(WEBLLM_URL);
+  S.engine = await webllm.CreateMLCEngine(modelId, { initProgressCallback: cb });
+  S.engineId = modelId; return S.engine;
+}
+async function streamBrowser(reply, msgs, st) {
+  const engine = await getEngine(BROWSER_MODELS[S.data.model], t => { reply.content = '*' + t + '*'; renderMessages(true); });
+  reply.content = ''; renderMessages(true);
+  S.ctrl.signal.addEventListener('abort', () => { S.aborted = true; engine.interruptGenerate(); });
+  const stream = await engine.chat.completions.create({ messages: msgs, stream: true, temperature: +st.temperature, top_p: +st.top_p });
+  for await (const ch of stream) { const d = ch.choices[0]?.delta?.content; if (d) { reply.content += d; renderMessages(true); } }
+}
+
+/* ---------- Backend 2: Ollama /api/chat (NDJSON-Stream) ---------- */
+async function streamOllama(reply, msgs, st) {
+  const res = await fetch(st.endpoint.replace(/\/$/, '') + '/api/chat', {
+    method: 'POST', signal: S.ctrl.signal, headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: st.tags[S.data.model], stream: true, messages: msgs, options: { temperature: +st.temperature, top_p: +st.top_p, num_ctx: +st.num_ctx } })
+  });
+  if (!res.ok) throw new Error('Server antwortete mit Status ' + res.status + (res.status === 404 ? ' – Modell „' + st.tags[S.data.model] + '“ ist nicht installiert.' : ''));
+  const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '';
+  while (true) {
+    const { done, value } = await reader.read(); if (done) break;
+    buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop();
+    for (const l of lines) { if (!l.trim()) continue; const j = JSON.parse(l); if (j.message?.content) { reply.content += j.message.content; renderMessages(true); } }
+  }
+}
+
+/* ---------- Chat-Steuerung (Ollama /api/chat, NDJSON-Stream) ---------- */
 async function send(text) {
   text = text.trim(); if (!text || S.busy) return;
   if (!chat()) newChat();
@@ -144,27 +185,21 @@ async function send(text) {
   const reply = { role: 'assistant', content: '', model: S.data.model };
   c.messages.push(reply); S.busy = true; S.ctrl = new AbortController(); save(); renderMessages();
   const sys = st.system + '\n\n' + MODEL_EXTRA[S.data.model];
+  const msgs = [{ role: 'system', content: sys }, ...fitHistory(c.messages.slice(0, -1), Math.floor(st.num_ctx * 0.7) - approxTok(sys)).map(({ role, content }) => ({ role, content }))];
+  S.aborted = false;
   try {
-    const res = await fetch(st.endpoint.replace(/\/$/, '') + '/api/chat', {
-      method: 'POST', signal: S.ctrl.signal, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: st.tags[S.data.model], stream: true,
-        messages: [{ role: 'system', content: sys }, ...fitHistory(c.messages.slice(0, -1), Math.floor(st.num_ctx * 0.7) - approxTok(sys)).map(({ role, content }) => ({ role, content }))],
-        options: { temperature: +st.temperature, top_p: +st.top_p, num_ctx: +st.num_ctx }
-      })
-    });
-    if (!res.ok) throw new Error('Server antwortete mit Status ' + res.status + (res.status === 404 ? ' – Modell „' + st.tags[S.data.model] + '“ ist nicht installiert (siehe Tab „Training“).' : ''));
-    const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop();
-      for (const l of lines) { if (!l.trim()) continue; const j = JSON.parse(l); if (j.message?.content) { reply.content += j.message.content; renderMessages(true); } }
-    }
+    if (st.backend === 'ollama') await streamOllama(reply, msgs, st); else await streamBrowser(reply, msgs, st);
+    if (S.aborted) reply.content += reply.content ? '\n\n*(Abgebrochen)*' : '*(Abgebrochen)*';
   } catch (e) {
     if (e.name === 'AbortError') reply.content += reply.content ? '\n\n*(Abgebrochen)*' : '*(Abgebrochen)*';
-    else reply.error = true, reply.content = 'Keine Verbindung zum lokalen Modell.\n\n**Details:** ' + e.message + '\n\n1. Läuft Ollama? `ollama serve`\n2. Erlaubt Ollama diese Seite? `OLLAMA_ORIGINS="*" ollama serve`\n3. Stimmt der Endpoint in den Einstellungen (aktuell `' + st.endpoint + '`)?\n4. Existiert das Modell? `ollama list`';
+    else {
+      reply.error = true;
+      reply.content = st.backend === 'ollama'
+        ? 'Keine Verbindung zum lokalen Modell.\n\n**Details:** ' + e.message + '\n\n1. Läuft Ollama? `ollama serve`\n2. Erlaubt Ollama diese Seite? `OLLAMA_ORIGINS="*" ollama serve`\n3. Stimmt der Endpoint in den Einstellungen (aktuell `' + st.endpoint + '`)?\n4. Existiert das Modell? `ollama list`'
+        : 'Das Modell konnte nicht im Browser gestartet werden.\n\n**Details:** ' + e.message + '\n\n1. Nutze aktuelles Chrome oder Edge (WebGPU nötig).\n2. Öffne die Seite über `http://localhost` oder Vercel, nicht per Doppelklick auf die Datei.\n3. Beim ersten Start wird das Modell einmalig geladen (Internet nötig, 0,7–2 GB, danach im Browser-Cache).\n4. Genug freier Speicher? Sonst in den Einstellungen auf „Ollama“ wechseln.';
+    }
   }
-  S.busy = false; S.ctrl = null; save(); renderMessages(); updateSend();
+  S.busy = false; S.ctrl = null; S.aborted = false; save(); renderMessages(); updateSend();
 }
 
 function regen() {
@@ -295,7 +330,7 @@ function render() {
       <div class="relative">
         <button id="modelBtn" class="ghost rounded-lg px-3 py-2 flex items-center gap-2 text-sm font-semibold">${esc(mdl.name)}<i data-lucide="chevron-down" class="w-4 h-4"></i></button>
         <div id="modelMenu" class="hidden absolute top-full mt-2 left-0 glow border border-[color:var(--line)] bg-[color:var(--panel)] rounded-xl p-1 w-72 z-30">
-          ${Object.entries(MODELS).map(([k, m]) => `<button data-model="${k}" class="ghost w-full text-left rounded-lg p-3 ${k===S.data.model?'bg-white/10':''}"><div class="font-semibold text-sm">${m.name}</div><div class="text-xs text-[color:var(--mute)]">${m.desc} · <span class="mono">${esc(S.data.settings.tags[k])}</span></div></button>`).join('')}
+          ${Object.entries(MODELS).map(([k, m]) => `<button data-model="${k}" class="ghost w-full text-left rounded-lg p-3 ${k===S.data.model?'bg-white/10':''}"><div class="font-semibold text-sm">${m.name}</div><div class="text-xs text-[color:var(--mute)]">${m.desc} · <span class="mono">${S.data.settings.backend === 'ollama' ? esc(S.data.settings.tags[k]) : 'direkt im Browser'}</span></div></button>`).join('')}
         </div>
       </div>
       <div class="flex-1"></div>
@@ -322,7 +357,7 @@ function renderBody() {
   f.innerHTML = `<div class="max-w-3xl mx-auto glass rounded-2xl p-2 flex items-end gap-2">
     <textarea id="inp" rows="1" placeholder="Nachricht an ${esc(MODELS[S.data.model].name)}" class="!border-0 !bg-transparent resize-none max-h-48"></textarea>
     <button id="sendBtn" class="btn rounded-xl p-2.5" aria-label="Senden"></button></div>
-    <p class="text-center text-xs text-[color:var(--mute)] mt-2">Läuft lokal über ${esc(S.data.settings.endpoint)}. Prüfe wichtige Antworten selbst.</p>`;
+    <p class="text-center text-xs text-[color:var(--mute)] mt-2">${S.data.settings.backend === 'ollama' ? 'Läuft lokal über ' + esc(S.data.settings.endpoint) : 'Läuft komplett in deinem Browser'}. Prüfe wichtige Antworten selbst.</p>`;
   b.innerHTML = '<div id="msgs" class="max-w-3xl mx-auto p-4 md:p-6 space-y-6"></div>';
   const inp = $('#inp');
   inp.addEventListener('input', () => { inp.style.height = 'auto'; inp.style.height = inp.scrollHeight + 'px'; });
@@ -431,6 +466,7 @@ function openSettings() {
   const st = S.data.settings;
   modal(`<div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold">Modell-Einstellungen</h2><button id="x" class="ghost p-2 rounded-lg" aria-label="Schließen"><i data-lucide="x" class="w-5 h-5"></i></button></div>
     <div class="space-y-4 text-sm">
+      <label class="block">Modell-Ausführung<select id="s-be" class="mt-1"><option value="browser" ${st.backend!=='ollama'?'selected':''}>Direkt im Browser (kein Setup)</option><option value="ollama" ${st.backend==='ollama'?'selected':''}>Ollama (eigener Rechner/Server)</option></select></label>
       <label class="block">Ollama-Endpoint<input id="s-ep" value="${esc(st.endpoint)}" class="mt-1 mono"></label>
       <div class="grid grid-cols-2 gap-3">
         <label class="block">Tag Blue AI 1.0<input id="s-t1" value="${esc(st.tags['blue-1.0'])}" class="mt-1 mono"></label>
@@ -447,7 +483,7 @@ function openSettings() {
   $('#s-top').oninput = e => $('#v-p').textContent = e.target.value;
   $('#s-reset').onclick = () => { S.data.settings = structuredClone(DEFAULTS); save(); closeModal(); render(); toast('Standardwerte wiederhergestellt.'); };
   $('#s-save').onclick = () => {
-    S.data.settings = { endpoint: $('#s-ep').value.trim() || DEFAULTS.endpoint, temperature: +$('#s-temp').value, top_p: +$('#s-top').value, num_ctx: +$('#s-ctx').value,
+    S.data.settings = { backend: $('#s-be').value, customSystem: $('#s-sys').value !== DEFAULT_SYSTEM, endpoint: $('#s-ep').value.trim() || DEFAULTS.endpoint, temperature: +$('#s-temp').value, top_p: +$('#s-top').value, num_ctx: +$('#s-ctx').value,
       system: $('#s-sys').value, tags: { 'blue-1.0': $('#s-t1').value.trim() || DEFAULTS.tags['blue-1.0'], 'blue-1.1pro': $('#s-t2').value.trim() || DEFAULTS.tags['blue-1.1pro'] } };
     save(); closeModal(); render(); toast('Einstellungen gespeichert.');
   };
